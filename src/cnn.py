@@ -5,12 +5,14 @@ and save the current architecture
 """
 
 
-class Cnn():
+class cnn():
 
     def __init__(self):
         #TODO
+        initial_state = 0 #change later
+        self.state = initial_state
         return
 
-    def build_child_arch(self, action, previous_state):
+    def build_child_arch(self, action):
         #TODO
         return
