@@ -7,6 +7,7 @@ import cnn
 import controller
 from child_manager import get_reward
 
+#
 def train():
     #with tf.name_scope("train"):
     num_episodes = 100
