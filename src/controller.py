@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-#constants
+#constants#
 GAMMA = 0.9
 
 class controller(nn.Module):
