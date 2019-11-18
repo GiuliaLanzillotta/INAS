@@ -3,7 +3,7 @@
     - get_reward(state)
 """
 
-
+# Move to cnn later?
 def get_reward(state):
     #TODO
     return
