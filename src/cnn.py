@@ -6,7 +6,7 @@ and save the current architecture
 import torch
 from torch import nn
 import torch.optim as optim
-import conv_net
+from conv_net import conv_net
 import numpy as np
 
 max_layers = 2
@@ -22,14 +22,15 @@ class cnn():
         self.image_size = image_size
         self.prev_channels = prev_channels
         self.num_classes = num_classes
+        self.max_layers= max_layers
         self.op_add = [lambda x: x+1, lambda x: x, lambda x: x-1]
         self.op_mul = [lambda x: x*2, lambda x: x, lambda x: x/2]
         self.epochs = epochs
         return
     
-    def update_image_size(self, state, layer):
+    def update_image_size(self, state):
         n = self.image_size
-        k = state[0 + layer*5]  # filter_size
+        k = state[0]  # filter_size
         s = 1                   # stride
         return (n-k)/s + 1
     
@@ -52,13 +53,13 @@ class cnn():
             layer_state = [state0,state1,state2,state3,state4]
             layer_state, _ = self.check_state(layer_state, layer)
             state.extend(layer_state)
-            self.image_size = self.update_image_size(layer_state, layer)
+            self.image_size = self.update_image_size(layer_state)
  
         self.state=state
-        self.net = conv_net(state, input_size=self.image_size , prev_channels = self.prev_channels, num_classes=self.num_classes)
+        self.net = conv_net(state, input_size=self.image_size , prev_channels = self.prev_channels, n_class=self.num_classes)
         return
     
-    def check_state(self, state, layer,padding, kernel):
+    def check_state(self, state, layer):
         count = 0
         padding = np.ceil(((state[1]-1)*self.image_size - state[1] + state[0])/2)
         # 0:size of filter, 1:stride, 2:channels, 3:maxpool(boolean), 4:max_pool_size
@@ -66,7 +67,7 @@ class cnn():
         if (state[0]<=0 or state[0]>self.image_size):
             state[0] = self.state[0+layer*5]
             count = count+1
-        if (state[1]<=0 or state[1]>self.image_size + padding - kernel): # add later 
+        if (state[1]<=0 or state[1]>self.image_size + padding - state[0]): # add later 
             state[1] = self.state[1+layer*5]
             count = count+1
         if (state[2]<=0 or state[2] > 256): # later, penalty for the running time

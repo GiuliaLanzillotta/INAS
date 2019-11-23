@@ -3,8 +3,8 @@ The train file has to coordinate the REINFORCE algorithm in the main function
 """
 import numpy as np
 import tensorflow as tf
-import cnn
-import controller
+from cnn import cnn
+from controller import controller
 from child_manager import get_reward
 import torch
 from torch import nn
@@ -31,7 +31,7 @@ def train():
         logits = []
         for step in range(num_steps):
             action, logit = controller1.get_action(initial_state) # what state?
-            new_state = cnn1.build_child_arc(action, initial_state)
+            new_state = cnn1.build_child_arch(action)
             reward = cnn1.get_reward(data_loader) #already have new_state updated
             logits.append(logit)
             rewards.append(reward)
