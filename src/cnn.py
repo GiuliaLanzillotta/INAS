@@ -6,7 +6,7 @@ and save the current architecture
 import torch
 from torch import nn
 import torch.optim as optim
-from conv_net import conv_net
+from src.conv_net import conv_net
 import numpy as np
 
 max_layers = 2
@@ -20,6 +20,7 @@ class cnn():
         initial_state = [3,1,32,0,2,3,1,64,0,2]#*max_layers #0 means yes to max_pool
         self.state = initial_state
         self.image_size = image_size
+        self.original_image_size = image_size
         self.prev_channels = prev_channels
         self.num_classes = num_classes
         self.max_layers= max_layers
@@ -56,7 +57,7 @@ class cnn():
             self.image_size = self.update_image_size(layer_state)
  
         self.state=state
-        self.net = conv_net(state, input_size=self.image_size , prev_channels = self.prev_channels, n_class=self.num_classes)
+        self.net = conv_net(state, input_size=self.original_image_size, prev_channels = self.prev_channels, n_class=self.num_classes)
         return
     
     def check_state(self, state, layer):
@@ -79,10 +80,7 @@ class cnn():
         
         return state, count
     
-    
-        
-        
-    
+
     def get_reward(self, data_loader):
         data_loader_train, data_loader_test = data_loader
         criterion = nn.CrossEntropyLoss()

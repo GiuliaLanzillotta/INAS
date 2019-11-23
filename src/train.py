@@ -3,16 +3,15 @@ The train file has to coordinate the REINFORCE algorithm in the main function
 """
 import numpy as np
 import tensorflow as tf
-from cnn import cnn
-from controller import controller
-from child_manager import get_reward
+from src.cnn import cnn
+from src.controller import controller
 import torch
-from torch import nn
 import torchvision
+import torchvision.transforms as transforms
 
 # This means that we're only looking at squared images for now.
-image_size = 28
-prev_channels = 1
+image_size = 32
+prev_channels = 3
 num_classes = 10
 from time import time
 def train():
@@ -45,18 +44,20 @@ def train():
     return new_state
 
 def load_data(batch_size = 16):
-    #TODO
-    
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                            download=True)
+    transform = transforms.Compose(
+        [transforms.ToTensor(),
+         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    trainset = torchvision.datasets.CIFAR10(root='../data', train=True,
+                                            download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,
                                               shuffle=True, num_workers=0)
     
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                           download=True)
+    testset = torchvision.datasets.CIFAR10(root='../data', train=False,
+                                           download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=4,
                                              shuffle=False, num_workers=0)
     return trainloader, testloader
+
 if __name__ == '__main__':
   train()
 

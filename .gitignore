@@ -1,2 +1,5 @@
 .idea
 venv
+/src/data
+/data
+/src/__pycache__
