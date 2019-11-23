@@ -14,7 +14,7 @@ import torchvision
 image_size = 28
 prev_channels = 1
 num_classes = 10
-
+from time import time
 def train():
     #with tf.name_scope("train"):
     num_episodes = 100
@@ -22,18 +22,25 @@ def train():
     max_layers = 2
     data_loader = load_data()
     controller1 = controller(max_layers)
-    for ep in num_episodes:
+    t1 = time()
+    for ep in range(num_episodes):
+        print("episode ", ep)
         cnn1 = cnn(max_layers, image_size, prev_channels, num_classes)
         initial_state = cnn1.state
         rewards = []
         logits = []
-        for step in num_steps:
+        for step in range(num_steps):
             action, logit = controller1.get_action(initial_state) # what state?
             new_state = cnn1.build_child_arc(action, initial_state)
             reward = cnn1.get_reward(data_loader) #already have new_state updated
             logits.append(logit)
             rewards.append(reward)
-        controller.update_policy(rewards,logits)    
+            print("Step",ep,":",step)
+            print("Reward: ", reward)
+            print("State: ", new_state)
+        controller.update_policy(rewards,logits)
+        t2 = time()
+        print("Elapsed time: ", t2-t1)
         
     return new_state
 

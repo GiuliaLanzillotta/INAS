@@ -3,8 +3,11 @@ and save the current architecture
     It has to implement:
     - build_child_arch(action, previous_state)
 """
+import torch
 from torch import nn
 import torch.optim as optim
+import conv_net
+import numpy as np
 
 max_layers = 2
 class cnn():
@@ -14,23 +17,27 @@ class cnn():
         # size of filter, stride, channels, maxpool(boolean), max_pool_size
         # Droput? Use same padding for now. 
         # (We may have to change the image_size if we use same)
-        initial_state = [3,1,32,0,2]*max_layers #0 means yes to max_pool
+        initial_state = [3,1,32,0,2,3,1,64,0,2]#*max_layers #0 means yes to max_pool
         self.state = initial_state
         self.image_size = image_size
-        self.padding = 2 # change
-        self.kernel = 2  # change
         self.prev_channels = prev_channels
         self.num_classes = num_classes
         self.op_add = [lambda x: x+1, lambda x: x, lambda x: x-1]
         self.op_mul = [lambda x: x*2, lambda x: x, lambda x: x/2]
         self.epochs = epochs
         return
+    
+    def update_image_size(self, state, layer):
+        n = self.image_size
+        k = state[0 + layer*5]  # filter_size
+        s = 1                   # stride
+        return (n-k)/s + 1
+    
 
     def build_child_arch(self, action):
         #TODO
         #max_pool, cnn or avg_pool
         state = []
-        image_size = self.image_size
         for layer in range(self.max_layers):
             action0 = action[0+layer*5]
             action1 = action[1+layer*5]
@@ -43,16 +50,17 @@ class cnn():
             state3  = action3
             state4  = self.op_add[action4](self.state[4+layer*5])
             layer_state = [state0,state1,state2,state3,state4]
-            layer_state, _ = check_state(layer_state, layer)
+            layer_state, _ = self.check_state(layer_state, layer)
             state.extend(layer_state)
-            image_size = update_image_size(layer_state)
+            self.image_size = self.update_image_size(layer_state, layer)
  
         self.state=state
-        self.net = conv_net(state, input_size=self.image_size , prev_channels = self.prev_channels, num_classes=num_classes)
+        self.net = conv_net(state, input_size=self.image_size , prev_channels = self.prev_channels, num_classes=self.num_classes)
         return
     
-    def check_state(self, state, layer):
+    def check_state(self, state, layer,padding, kernel):
         count = 0
+        padding = np.ceil(((state[1]-1)*self.image_size - state[1] + state[0])/2)
         # 0:size of filter, 1:stride, 2:channels, 3:maxpool(boolean), 4:max_pool_size
         # We must be careful about everything except 3: maxpool(boolean)
         if (state[0]<=0 or state[0]>self.image_size):
@@ -70,18 +78,14 @@ class cnn():
         
         return state, count
     
-    def update_image_size(self, state):
-        n = self.image_size
-        k = state[0 + layer*5]  # filter_size
-        s = 1                   # stride
-        return (n-k)/s + 1
+    
         
         
     
     def get_reward(self, data_loader):
         data_loader_train, data_loader_test = data_loader
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+        optimizer = optim.SGD(self.net.parameters(), lr=0.001, momentum=0.9)
         for epoch in range(self.epochs):  # loop over the dataset multiple times
             running_loss = 0.0
             for i, data in enumerate(data_loader_train, 0):

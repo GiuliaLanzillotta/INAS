@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.optim as optim
 from torch.autograd import Variable
 
 #constants##
@@ -38,45 +39,45 @@ class controller(nn.Module):
     def forward(self, state):
         logits = []
         softmax = nn.Softmax(1)
-        output, hidden_states = cells[0](state[0])
+        output, hidden_states = self.cells[0](state[0])
         output = output.reshape(1,3) # this is the logit
         logit = softmax(output)
         logits.append(logit)        
-        for i,cell in enumerate(cells[1,-1]):
-            output, hidden_states = cells[i](state[i],hidden_states[cell])
+        for i,cell in enumerate(self.cells[1,-1]):
+            output, hidden_states = self.cells[i](state[i],hidden_states[cell])
             output = output.reshape(1,3) # this is the logit
             logit = softmax(output)
             logits.append(logit)
         return logits
 
     def get_action(self, state): # state = sequence of length 5 times number of layers
-        logits = forward(state)
+        logits = self.forward(state)
         actions = [torch.argmax(logit) for logit in logits]      
         return actions,logits 
     
     # REINFORCE
     def update_policy(self, rewards, logits):
-    discounted_rewards = []
+        discounted_rewards = []
 
-    for t in range(len(rewards)):
-        Gt = 0 
-        pw = 0
-        for r in rewards[t:]:
-            Gt = Gt + GAMMA**pw * r
-            pw = pw + 1
-        discounted_rewards.append(Gt)
-        
-    discounted_rewards = torch.tensor(discounted_rewards)
-    discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-9) # normalize discounted rewards
-
-    policy_gradient = []
-    for logit, Gt in zip(logits, discounted_rewards):
-        policy_gradient.append(-logit * Gt)
+        for t in range(len(rewards)):
+            Gt = 0 
+            pw = 0
+            for r in rewards[t:]:
+                Gt = Gt + GAMMA**pw * r
+                pw = pw + 1
+            discounted_rewards.append(Gt)
+            
+        discounted_rewards = torch.tensor(discounted_rewards)
+        discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-9) # normalize discounted rewards
     
-    self.optimizer.zero_grad()
-    policy_gradient = torch.stack(policy_gradient).sum()
-    policy_gradient.backward()
-    self.optimizer.step()
+        policy_gradient = []
+        for logit, Gt in zip(logits, discounted_rewards):
+            policy_gradient.append(-logit * Gt)
+        
+        self.optimizer.zero_grad()
+        policy_gradient = torch.stack(policy_gradient).sum()
+        policy_gradient.backward()
+        self.optimizer.step()
         
 
 
