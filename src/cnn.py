@@ -11,6 +11,8 @@ import numpy as np
 
 max_layers = 2
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 class cnn():
 
     def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=1):
@@ -28,6 +30,7 @@ class cnn():
         self.op_add = [lambda x: x+1, lambda x: x, lambda x: x-1]
         self.op_mul = [lambda x: x*2, lambda x: x, lambda x: x/2]
         self.epochs = epochs
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         return
     
     def update_image_size(self, state):
@@ -56,9 +59,9 @@ class cnn():
             layer_state, _ = self.check_state(layer_state, layer)
             state.extend(layer_state)
             self.image_size = self.update_image_size(layer_state)
- 
-        self.state=state
-        self.net = conv_net(state, input_size=self.original_image_size, prev_channels = self.prev_channels, n_class=self.num_classes)
+
+        self.net = conv_net(state, input_size=self.original_image_size, prev_channels = self.prev_channels, n_class=self.num_classes,device = self.device)
+        self.net = self.net.to(device)
         return self.state
     
     def check_state(self, state, layer):
@@ -90,6 +93,7 @@ class cnn():
             for i, data in enumerate(data_loader_train, 0):
                 # get the inputs; data is a list of [inputs, labels]
                 inputs, labels = data
+                inputs, labels = inputs.to(device), labels.to(device)
         
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -116,6 +120,7 @@ class cnn():
         with torch.no_grad():
             for data in data_loader_test:
                 images, labels = data
+                images, labels = images.to(device), labels.to(device)
                 outputs = self.net(images)
                 _, predicted = torch.max(outputs, 1)
                 c = (predicted == labels).squeeze()
