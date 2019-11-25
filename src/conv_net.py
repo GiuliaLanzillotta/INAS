@@ -1,13 +1,15 @@
 from torch import nn
 import numpy as np
+import torch
 
 class conv_net(nn.Module):
 
-    def __init__(self, conv_layers, input_size=32, prev_channels=3, n_class=10, device='cpu'):
+    def __init__(self, conv_layers, input_size=32, prev_channels=3, n_class=10, device = 'cuda'):
         super(conv_net, self).__init__()
 
         self.input_size = input_size
         self.n_class = n_class
+        self.device = device
 
         layers = []
         img_dim = input_size
@@ -50,6 +52,7 @@ class conv_net(nn.Module):
         return int((image_size - kernel_size + 2*padding)/stride + 1)
 
     def forward(self, x):
+        x = x.to(self.device)
         for i,layer in enumerate(self.layers):
             if(i==len(self.layers)-1):
                 x = x.flatten(1,-1)

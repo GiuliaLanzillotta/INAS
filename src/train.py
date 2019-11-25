@@ -1,8 +1,6 @@
 """
 The train file has to coordinate the REINFORCE algorithm in the main function
 """
-import numpy as np
-import tensorflow as tf
 from src.cnn import cnn
 from src.controller import controller
 import torch
@@ -14,6 +12,9 @@ image_size = 32
 prev_channels = 3
 num_classes = 10
 from time import time
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 def train():
     #with tf.name_scope("train"):
     num_episodes = 100
