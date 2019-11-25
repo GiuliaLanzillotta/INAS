@@ -17,7 +17,7 @@ from time import time
 def train():
     #with tf.name_scope("train"):
     num_episodes = 100
-    num_steps = 10
+    num_steps = 1
     max_layers = 2
     data_loader = load_data()
     controller1 = controller(max_layers)
@@ -37,7 +37,7 @@ def train():
             print("Step",ep,":",step)
             print("Reward: ", reward)
             print("State: ", new_state)
-        controller.update_policy(rewards, logits)
+        controller1.update_policy(rewards, logits)
         t2 = time()
         print("Elapsed time: ", t2-t1)
         

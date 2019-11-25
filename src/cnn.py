@@ -13,7 +13,7 @@ max_layers = 2
 
 class cnn():
 
-    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=3):
+    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=1):
         #TODO
         # size of filter, stride, channels, maxpool(boolean), max_pool_size
         # Droput? Use same padding for now. 
@@ -125,8 +125,8 @@ class cnn():
                     class_total[label] += 1
 
         for i in range(10):
-            print('Accuracy of %5s : %2d %%' % (
-                100 * class_correct[i] / class_total[i]))
+            print("Accuracy of ",
+                100 * class_correct[i] / class_total[i])
             
         reward = sum(class_correct)/sum(class_total)
         

@@ -66,11 +66,13 @@ class controller(nn.Module):
             discounted_rewards.append(Gt)
             
         discounted_rewards = torch.tensor(discounted_rewards)
-        discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-9) # normalize discounted rewards
+        #discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-4) # normalize discounted rewards
     
         policy_gradient = []
+        logits = torch.tensor(logits)
+        logits = logits.flatten(1,-1)
         for logit, Gt in zip(logits, discounted_rewards):
-            policy_gradient.append(-logit * Gt)
+            policy_gradient.append(-1*torch.tensor(logit) * torch.tensor(Gt))
         
         self.optimizer.zero_grad()
         policy_gradient = torch.stack(policy_gradient).sum()
