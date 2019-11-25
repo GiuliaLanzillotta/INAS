@@ -37,7 +37,7 @@ def train():
             print("Step",ep,":",step)
             print("Reward: ", reward)
             print("State: ", new_state)
-        controller.update_policy(rewards,logits)
+        controller.update_policy(rewards, logits)
         t2 = time()
         print("Elapsed time: ", t2-t1)
         

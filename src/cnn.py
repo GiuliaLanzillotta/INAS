@@ -10,6 +10,7 @@ from src.conv_net import conv_net
 import numpy as np
 
 max_layers = 2
+
 class cnn():
 
     def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=3):
@@ -46,11 +47,11 @@ class cnn():
             action2 = action[2+layer*5]
             action3 = action[3+layer*5]
             action4 = action[4+layer*5]
-            state0  = self.op_add[action0](self.state[0+layer*5])
-            state1  = self.op_add[action1](self.state[1+layer*5])
-            state2  = self.op_mul[action2](self.state[2+layer*5])
-            state3  = action3
-            state4  = self.op_add[action4](self.state[4+layer*5])
+            state0 = self.op_add[action0](self.state[0+layer*5])
+            state1 = self.op_add[action1](self.state[1+layer*5])
+            state2 = self.op_mul[action2](self.state[2+layer*5])
+            state3 = action3
+            state4 = self.op_add[action4](self.state[4+layer*5])
             layer_state = [state0,state1,state2,state3,state4]
             layer_state, _ = self.check_state(layer_state, layer)
             state.extend(layer_state)
@@ -58,7 +59,7 @@ class cnn():
  
         self.state=state
         self.net = conv_net(state, input_size=self.original_image_size, prev_channels = self.prev_channels, n_class=self.num_classes)
-        return
+        return self.state
     
     def check_state(self, state, layer):
         count = 0
@@ -79,7 +80,6 @@ class cnn():
             count = count+1
         
         return state, count
-    
 
     def get_reward(self, data_loader):
         data_loader_train, data_loader_test = data_loader
@@ -106,6 +106,8 @@ class cnn():
                     print('[%d, %5d] loss: %.3f' %
                           (epoch + 1, i + 1, running_loss / 2000))
                     running_loss = 0.0
+                if i == 5999:
+                    break
 
         print('Finished Training')
         
@@ -121,8 +123,7 @@ class cnn():
                     label = labels[i]
                     class_correct[label] += c[i].item()
                     class_total[label] += 1
-        
-        
+
         for i in range(10):
             print('Accuracy of %5s : %2d %%' % (
                 100 * class_correct[i] / class_total[i]))
@@ -130,3 +131,4 @@ class cnn():
         reward = sum(class_correct)/sum(class_total)
         
         return reward
+
