@@ -6,6 +6,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import math
 from torch.autograd import Variable
 
 #constants##
@@ -69,13 +70,24 @@ class controller(nn.Module):
         #discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-4) # normalize discounted rewards
     
         policy_gradient = []
-        logits = torch.tensor(logits)
-        logits = logits.flatten(1,-1)
+        # logits = torch.tensor(logits)
+        # logits = logits.flatten(1,-1)
+        # logits is a list of lists where the outer contains all steps taken, the inner for a given step length  has 10 elements where each element is a tensor of length 3
         for logit, Gt in zip(logits, discounted_rewards):
-            policy_gradient.append(-1*torch.tensor(logit) * torch.tensor(Gt))
+            for element in logit:
+                element = torch.max(element)
+                policy_gradient.append(-1.0 * torch.log(element) * Gt)
+                # for index in range(3):
+                #     policy_gradient.append(-1.0 * torch.log(element[0, index].type(torch.float)) * Gt)
+            # policy_gradient.append(-1*torch.tensor(logit) * torch.tensor(Gt))
         
         self.optimizer.zero_grad()
-        policy_gradient = torch.stack(policy_gradient).sum()
+        policy_gradient = torch.stack(policy_gradient).sum() * (1 / len(logits))
+        print(policy_gradient)
+        print(logits)
+        for element in logits:
+            print(len(element))
+        print(len(logits))
         policy_gradient.backward()
         self.optimizer.step()
         
