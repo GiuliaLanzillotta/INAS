@@ -83,11 +83,6 @@ class controller(nn.Module):
         
         self.optimizer.zero_grad()
         policy_gradient = torch.stack(policy_gradient).sum() * (1 / len(logits))
-        print(policy_gradient)
-        print(logits)
-        for element in logits:
-            print(len(element))
-        print(len(logits))
         policy_gradient.backward()
         self.optimizer.step()
         

@@ -18,7 +18,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def train():
     #with tf.name_scope("train"):
     num_episodes = 100
-    num_steps = 1
+    num_steps = 10
     max_layers = 2
     data_loader = load_data()
     controller1 = controller(max_layers)
@@ -26,13 +26,14 @@ def train():
     for ep in range(num_episodes):
         print("episode ", ep)
         cnn1 = cnn(max_layers, image_size, prev_channels, num_classes)
-        initial_state = cnn1.state
+        state = cnn1.state
         rewards = []
         logits = []
         for step in range(num_steps):
-            action, logit = controller1.get_action(initial_state) # what state?
+            action, logit = controller1.get_action(state) # what state?
             new_state = cnn1.build_child_arch(action)
             reward = cnn1.get_reward(data_loader) #already have new_state updated
+            state = new_state
             logits.append(logit)
             rewards.append(reward)
             print("Step",ep,":",step)
@@ -41,8 +42,6 @@ def train():
         controller1.update_policy(rewards, logits)
         t2 = time()
         print("Elapsed time: ", t2-t1)
-        
-    return new_state
 
 def load_data(batch_size = 16):
     transform = transforms.Compose(
