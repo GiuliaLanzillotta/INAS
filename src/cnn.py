@@ -27,7 +27,7 @@ class cnn():
         self.prev_channels = prev_channels
         self.num_classes = num_classes
         self.max_layers= max_layers
-        self.op_add = [lambda x: x+1, lambda x: x, lambda x: x-1]
+        self.op_add = [lambda x: x+1 , lambda x: x, lambda x: x-1]
         self.op_mul = [lambda x: x*2, lambda x: x, lambda x: x/2]
         self.epochs = epochs
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -106,10 +106,7 @@ class cnn():
         
                 # print statistics
                 running_loss += loss.item()
-                if i % 2000 == 1999:    # print every 2000 mini-batches
-                    print('[%d, %5d] loss: %.3f' %
-                          (epoch + 1, i + 1, running_loss / 2000))
-                    running_loss = 0.0
+                #TODO: change the stopping parameter
                 if i == 5999:
                     break
 
