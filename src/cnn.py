@@ -62,6 +62,8 @@ class cnn():
 
         self.net = conv_net(state, input_size=self.original_image_size, prev_channels = self.prev_channels, n_class=self.num_classes,device = self.device)
         self.net = self.net.to(device)
+
+        self.state = state
         return self.state
     
     def check_state(self, state, layer):
