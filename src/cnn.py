@@ -29,7 +29,7 @@ class cnn():
         self.max_layers= max_layers
         self.op_add = [lambda x: x+1 , lambda x: x, lambda x: x-1]
         self.op_mul = [lambda x: x*2, lambda x: x, lambda x: x/2]
-        self.epochs = epochs
+        self.epochs = 1
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         return
     
@@ -71,16 +71,16 @@ class cnn():
         padding = np.ceil(((state[1]-1)*self.image_size - state[1] + state[0])/2)
         # 0:size of filter, 1:stride, 2:channels, 3:maxpool(boolean), 4:max_pool_size
         # We must be careful about everything except 3: maxpool(boolean)
-        if (state[0]<=0 or state[0]>self.image_size):
+        if (state[0]<1 or state[0]>self.image_size):
             state[0] = self.state[0+layer*5]
             count = count+1
-        if (state[1]<=0 or state[1]>self.image_size + padding - state[0]): # add later 
+        if (state[1]<1 or state[1]>self.image_size + padding - state[0]): # add later
             state[1] = self.state[1+layer*5]
             count = count+1
-        if (state[2]<=0 or state[2] > 256): # later, penalty for the running time
+        if (state[2]<1 or state[2] > 256): # later, penalty for the running time
             state[2] = self.state[2+layer*5]
             count = count+1
-        if (state[4]<=0 or state[4] >= self.image_size):
+        if (state[4]<1 or state[4] >= self.image_size):
             state[4] = self.state[4+layer*5]
             count = count+1
         
@@ -109,7 +109,7 @@ class cnn():
                 # print statistics
                 running_loss += loss.item()
                 #TODO: change the stopping parameter
-                if i == 5999:
+                if i == 2999:
                     break
 
         print('Finished Training')

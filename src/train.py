@@ -18,7 +18,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def train():
     #with tf.name_scope("train"):
     num_episodes = 100
-    num_steps = 10
+    num_steps = 2
     max_layers = 2
     data_loader = load_data()
     controller1 = controller(max_layers)
