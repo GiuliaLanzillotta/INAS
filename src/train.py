@@ -1,8 +1,8 @@
 """
 The train file has to coordinate the REINFORCE algorithm in the main function
 """
-from src.cnn import cnn
-from src.controller import controller
+from cnn import cnn
+from controller import controller
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -19,8 +19,9 @@ def train():
     #with tf.name_scope("train"):
     num_episodes = 100
     num_steps = 10
-    max_layers = 2
+    max_layers = 3
     data_loader = load_data()
+    max_ep_reward = 0
     controller1 = controller(max_layers)
     t1 = time()
     for ep in range(num_episodes):
@@ -40,6 +41,15 @@ def train():
             print("Reward: ", reward)
             print("State: ", new_state)
         controller1.update_policy(rewards, logits)
+        episode_reward = rewards[0]
+        if ep % 3 == 1:
+            if (episode_reward<max_ep_reward):
+                controller1.add_layer()
+                print("Adding one layer")
+                max_layers  = max_layers+1
+            else:
+                max_ep_reward = episode_reward
+    
         t2 = time()
         print("Elapsed time: ", t2-t1)
 

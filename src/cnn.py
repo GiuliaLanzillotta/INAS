@@ -6,7 +6,7 @@ and save the current architecture
 import torch
 from torch import nn
 import torch.optim as optim
-from src.conv_net import conv_net
+from conv_net import conv_net
 import numpy as np
 
 max_layers = 2

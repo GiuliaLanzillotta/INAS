@@ -2,6 +2,8 @@
     It has to implement the following methods:
     - get_action(state)
     - update_policy(episode)
+    
+    Change the controller? Attention model or bidirectional RNN.
 """
 import torch
 import torch.nn as nn
@@ -19,17 +21,17 @@ class controller(nn.Module):
         super(controller,self).__init__()
         
         cells = []
-        for layer in range(max_layers):
-            cell1 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell2 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell3 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell4 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell5 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cells.append(cell1)
-            cells.append(cell2)
-            cells.append(cell3)
-            cells.append(cell4)
-            cells.append(cell5)
+        cell1 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
+        cell2 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
+        cell3 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
+        cell4 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
+        cell5 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
+        cells.append(cell1)
+        cells.append(cell2)
+        cells.append(cell3)
+        cells.append(cell4)
+        cells.append(cell5)
+        cells=[cells*max_layers][0]
         self.cells = nn.ModuleList(cells) # better name: layers
         self.num_layers = 5*max_layers
         self.optimizer = optim.Adam(self.parameters(), lr=1e-3)
@@ -48,6 +50,13 @@ class controller(nn.Module):
             logit = softmax(output)
             logits.append(logit)
         return logits
+    
+    def add_layer(self):
+        self.cells = self.cells.append(self.cells[0])
+        self.cells = self.cells.append(self.cells[1])
+        self.cells = self.cells.append(self.cells[2])
+        self.cells = self.cells.append(self.cells[3])
+        self.cells = self.cells.append(self.cells[4])
 
     def get_action(self, state): # state = sequence of length 5 times number of layers
         logits = self.forward(state)
