@@ -32,6 +32,7 @@ class controller(nn.Module):
         cells.append(cell4)
         cells.append(cell5)
         cells=[cells*max_layers][0]
+
         self.cells = nn.ModuleList(cells) # better name: layers
         self.num_layers = 5*max_layers
         self.optimizer = optim.Adam(self.parameters(), lr=1e-3)
@@ -39,8 +40,10 @@ class controller(nn.Module):
     def forward(self, state):
         logits = []
         softmax = nn.Softmax(1)
-        
+
+ 
         for i,cell in enumerate(self.cells):
+
             state_i = torch.tensor(state[i],dtype=torch.float).view(1,1,1)
             if(i==0):
                 output, hidden_states = cell(state_i)

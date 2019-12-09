@@ -3,3 +3,4 @@ venv
 /src/data
 /data
 /src/__pycache__
+lsf.*

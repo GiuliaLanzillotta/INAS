@@ -9,7 +9,6 @@ import torch.optim as optim
 from conv_net import conv_net
 import numpy as np
 
-max_layers = 2
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -20,7 +19,7 @@ class cnn():
         # size of filter, stride, channels, maxpool(boolean), max_pool_size
         # Droput? Use same padding for now. 
         # (We may have to change the image_size if we use same)
-        initial_state = [3,1,32,0,2,3,1,64,0,2]#*max_layers #0 means yes to max_pool
+        initial_state = list([[3,1,32,0,2]*max_layers][0]) #0 means yes to max_pool
         self.state = initial_state
         self.image_size = image_size
         self.original_image_size = image_size
@@ -130,10 +129,6 @@ class cnn():
                     label = labels[i]
                     class_correct[label] += c[i].item()
                     class_total[label] += 1
-
-        for i in range(10):
-            print("Accuracy of ",
-                100 * class_correct[i] / class_total[i])
             
         reward = sum(class_correct)/sum(class_total)
         
