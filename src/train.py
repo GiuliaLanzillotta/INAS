@@ -19,7 +19,7 @@ def train():
     #with tf.name_scope("train"):
     num_episodes = 100
     num_steps = 2
-    max_layers = 2
+    max_layers = 10
     data_loader = load_data()
     controller1 = controller(max_layers)
     t1 = time()
@@ -31,6 +31,7 @@ def train():
         logits = []
         for step in range(num_steps):
             action, logit = controller1.get_action(state) # what state?
+            print("Action: ",action)
             new_state = cnn1.build_child_arch(action)
             reward = cnn1.get_reward(data_loader) #already have new_state updated
             state = new_state

@@ -22,7 +22,8 @@ class conv_net(nn.Module):
             p = int(np.ceil(((n-1)*stride - n + kernel_size)/2))
             layers += [
                 nn.Conv2d(int(prev_channels), int(n_channels), int(kernel_size), stride=int(stride), padding=p),
-                nn.ReLU()
+                nn.ReLU(),
+                nn.BatchNorm(int(n_channels))
             ]
             img_dim = self.update_size(img_dim, int(kernel_size), int(stride), p)
 
@@ -42,8 +43,12 @@ class conv_net(nn.Module):
         #layers += [nn.Flatten(1,-1)]
 
         self.prev_fc_size = int(int(prev_channels) * img_dim * img_dim)
-        
-        layers += [nn.Linear(self.prev_fc_size, n_class)]
+
+        layers += [nn.Dropout(0.2),
+                   nn.Linear(self.prev_fc_size, 200),
+                   nn.ELU(),
+                   nn.Linear(200, n_class)
+                   ]
         self.layers = layers
         self.layers = nn.ModuleList(layers)
         #self.layers = nn.Sequential(*layers)

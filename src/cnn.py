@@ -9,18 +9,18 @@ import torch.optim as optim
 from src.conv_net import conv_net
 import numpy as np
 
-max_layers = 2
+max_layers = 10
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class cnn():
 
-    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=1):
+    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=5):
         #TODO
         # size of filter, stride, channels, maxpool(boolean), max_pool_size
         # Droput? Use same padding for now. 
         # (We may have to change the image_size if we use same)
-        initial_state = [3,1,32,0,2,3,1,64,0,2]#*max_layers #0 means yes to max_pool
+        initial_state = list([[3,1,32,0,2]*max_layers][0])#*max_layers #0 means yes to max_pool
         self.state = initial_state
         self.image_size = image_size
         self.original_image_size = image_size
@@ -29,7 +29,7 @@ class cnn():
         self.max_layers= max_layers
         self.op_add = [lambda x: x+1 , lambda x: x, lambda x: x-1]
         self.op_mul = [lambda x: x*2, lambda x: x, lambda x: x/2]
-        self.epochs = 1
+        self.epochs = epochs
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         return
     
@@ -77,7 +77,7 @@ class cnn():
         if (state[1]<1 or state[1]>self.image_size + padding - state[0]): # add later
             state[1] = self.state[1+layer*5]
             count = count+1
-        if (state[2]<1 or state[2] > 256): # later, penalty for the running time
+        if (state[2]<1 or state[2] > 1024): # later, penalty for the running time
             state[2] = self.state[2+layer*5]
             count = count+1
         if (state[4]<1 or state[4] >= self.image_size):
@@ -108,9 +108,9 @@ class cnn():
         
                 # print statistics
                 running_loss += loss.item()
-                #TODO: change the stopping parameter
-                if i == 2999:
-                    break
+
+
+
 
         print('Finished Training')
         
@@ -128,10 +128,7 @@ class cnn():
                     class_correct[label] += c[i].item()
                     class_total[label] += 1
 
-        for i in range(10):
-            print("Accuracy of ",
-                100 * class_correct[i] / class_total[i])
-            
+
         reward = sum(class_correct)/sum(class_total)
         
         return reward
