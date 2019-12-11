@@ -1,8 +1,8 @@
 """
 The train file has to coordinate the REINFORCE algorithm in the main function
 """
-from cnn import cnn
-from controller import controller
+from src.cnn import cnn
+from src.controller import controller
 import torch
 import torchvision
 import torchvision.transforms as transforms
