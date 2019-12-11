@@ -23,7 +23,7 @@ class conv_net(nn.Module):
             layers += [
                 nn.Conv2d(int(prev_channels), int(n_channels), int(kernel_size), stride=int(stride), padding=p),
                 nn.ReLU(),
-                nn.BatchNorm(int(n_channels))
+                nn.BatchNorm2d(int(n_channels))
             ]
             img_dim = self.update_size(img_dim, int(kernel_size), int(stride), p)
 
@@ -59,7 +59,7 @@ class conv_net(nn.Module):
     def forward(self, x):
         x = x.to(self.device)
         for i,layer in enumerate(self.layers):
-            if(i==len(self.layers)-1):
+            if(i==len(self.layers)-4):
                 x = x.flatten(1,-1)
             x = layer(x)
         return x
