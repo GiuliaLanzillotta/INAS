@@ -15,6 +15,8 @@ from time import time
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+layers_limit = 15
+
 def train():
     #with tf.name_scope("train"):
     num_episodes = 100
@@ -46,7 +48,7 @@ def train():
             if (episode_reward<max_ep_reward):
                 controller1.add_layer()
                 print("Adding one layer")
-                max_layers  = max_layers+1
+                max_layers  = min(layers_limit,max_layers+1)
             else:
                 max_ep_reward = episode_reward
     

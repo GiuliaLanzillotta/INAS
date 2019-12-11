@@ -20,6 +20,8 @@ class cnn():
         # Droput? Use same padding for now. 
         # (We may have to change the image_size if we use same)
         initial_state = list([[3,1,32,0,2]*max_layers][0]) #0 means yes to max_pool
+        random_layer = [5,2,64,1,2]
+        initial_state[5:10] = random_layer
         self.state = initial_state
         self.image_size = image_size
         self.original_image_size = image_size
