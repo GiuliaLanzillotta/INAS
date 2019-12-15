@@ -14,6 +14,9 @@ class conv_net(nn.Module):
         layers = []
         img_dim = input_size
 
+        # We don't seem to have pooling
+        print(conv_layers)
+
         for kernel_size, stride, n_channels, pooling, pooling_size in [conv_layers[x:x+5] for x in range(0, len(conv_layers)-1, 5)]:
             n = img_dim
             p = int(np.ceil(((n-1)*stride - n + kernel_size)/2))
@@ -37,15 +40,15 @@ class conv_net(nn.Module):
                 img_dim = self.update_size(img_dim, pooling_size, 1, 0)
 
             prev_channels = n_channels
-        #layers += [nn.Flatten(1,-1)]
 
         self.prev_fc_size = int(int(prev_channels) * img_dim * img_dim)
 
         layers += [nn.Dropout(0.2),
-                   nn.Linear(self.prev_fc_size, 200),
+                   nn.Linear(self.prev_fc_size, 300),
                    nn.ELU(),
-                   nn.Linear(200, n_class)
-                   ]
+                   nn.Dropout(0.2),
+                   nn.Linear(300, n_class)]
+
         self.layers = layers
         self.layers = nn.ModuleList(layers)
         #self.layers = nn.Sequential(*layers)

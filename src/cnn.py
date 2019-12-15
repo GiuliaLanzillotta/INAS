@@ -6,28 +6,30 @@ and save the current architecture
 import torch
 from torch import nn
 import torch.optim as optim
-from src.conv_net import conv_net
+from conv_net import conv_net
 import numpy as np
 
-max_layers = 10
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class cnn():
 
-    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=5):
+    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=1):
         #TODO
         # size of filter, stride, channels, maxpool(boolean), max_pool_size
         # Droput? Use same padding for now. 
         # (We may have to change the image_size if we use same)
-        initial_state = list([[3,1,32,0,2]*max_layers][0])#*max_layers #0 means yes to max_pool
+        initial_state = list([[3,1,32,0,2]*max_layers][0]) #0 means yes to max_pool
+        random_layer = [5,2,64,1,2]
+        initial_state[5:10] = random_layer
+
         self.state = initial_state
         self.image_size = image_size
         self.original_image_size = image_size
         self.prev_channels = prev_channels
         self.num_classes = num_classes
-        self.max_layers= max_layers
-        self.op_add = [lambda x: x+1 , lambda x: x, lambda x: x-1]
+        self.max_layers = max_layers
+        self.op_add = [lambda x: x+1, lambda x: x, lambda x: x-1]
         self.op_mul = [lambda x: x*2, lambda x: x, lambda x: x/2]
         self.epochs = epochs
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -71,16 +73,16 @@ class cnn():
         padding = np.ceil(((state[1]-1)*self.image_size - state[1] + state[0])/2)
         # 0:size of filter, 1:stride, 2:channels, 3:maxpool(boolean), 4:max_pool_size
         # We must be careful about everything except 3: maxpool(boolean)
-        if (state[0]<1 or state[0]>self.image_size):
+        if (state[0]<=0 or state[0]>self.image_size):
             state[0] = self.state[0+layer*5]
             count = count+1
-        if (state[1]<1 or state[1]>self.image_size + padding - state[0]): # add later
+        if (state[1]<=0 or state[1]>self.image_size + padding - state[0]): # add later 
             state[1] = self.state[1+layer*5]
             count = count+1
-        if (state[2]<1 or state[2] > 1024): # later, penalty for the running time
+        if (state[2]<=0 or state[2] > 1024): # later, penalty for the running time
             state[2] = self.state[2+layer*5]
             count = count+1
-        if (state[4]<1 or state[4] >= self.image_size):
+        if (state[4]<=0 or state[4] >= self.image_size):
             state[4] = self.state[4+layer*5]
             count = count+1
         
@@ -108,9 +110,12 @@ class cnn():
         
                 # print statistics
                 running_loss += loss.item()
-
-
-
+                if i % 2000 == 1999:    # print every 2000 mini-batches
+                    print('[%d, %5d] loss: %.3f' %
+                          (epoch + 1, i + 1, running_loss / 2000))
+                    running_loss = 0.0
+                if i == 5999:
+                    break
 
         print('Finished Training')
         
@@ -127,8 +132,7 @@ class cnn():
                     label = labels[i]
                     class_correct[label] += c[i].item()
                     class_total[label] += 1
-
-
+            
         reward = sum(class_correct)/sum(class_total)
         
         return reward
