@@ -35,7 +35,7 @@ class controller(nn.Module):
 
         self.cells = nn.ModuleList(cells) # better name: layers
         self.num_layers = 5*max_layers
-        self.optimizer = optim.Adam(self.parameters(), lr=1e-3)
+        self.optimizer = optim.Adam(self.parameters(), lr=1e-5)
             
     def forward(self, state):
         logits = []
@@ -79,7 +79,7 @@ class controller(nn.Module):
             discounted_rewards.append(Gt)
             
         discounted_rewards = torch.tensor(discounted_rewards)
-        #discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-4) # normalize discounted rewards
+        discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-4) # normalize discounted rewards
     
         policy_gradient = []
         # logits = torch.tensor(logits)
@@ -94,7 +94,7 @@ class controller(nn.Module):
             # policy_gradient.append(-1*torch.tensor(logit) * torch.tensor(Gt))
         
         self.optimizer.zero_grad()
-        policy_gradient = torch.stack(policy_gradient).sum() * (1 / len(logits))
+        policy_gradient = torch.stack(policy_gradient).sum() #* (1 / len(logits))
         policy_gradient.backward()
         self.optimizer.step()
         
