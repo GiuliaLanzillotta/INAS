@@ -1,8 +1,8 @@
 """
 The train file has to coordinate the REINFORCE algorithm in the main function
 """
-from src.cnn import cnn
-from src.controller import controller
+from cnn import cnn
+from controller import controller
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -11,6 +11,7 @@ import torchvision.transforms as transforms
 image_size = 32
 prev_channels = 3
 num_classes = 10
+layers_limit = 15
 from time import time
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -38,6 +39,7 @@ def train():
         state = cnn1.state
         rewards = []
         logits = []
+
         for step in range(num_steps):
             action, logit = controller1.get_action(state) # what state?
             print("Action: ")
@@ -54,6 +56,7 @@ def train():
             print("****************")
         controller1.update_policy(rewards, logits)
         episode_reward = rewards[0]
+
         if ep % 3 == 1:
             if (episode_reward<max_ep_reward):
                 controller1.add_layer()
@@ -61,7 +64,6 @@ def train():
                 print("Adding one layer : ",max_layers)
             else:
                 max_ep_reward = episode_reward
-    
         t2 = time()
         print("Elapsed time: ", t2-t1)
 

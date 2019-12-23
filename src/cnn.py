@@ -6,7 +6,7 @@ and save the current architecture
 import torch
 from torch import nn
 import torch.optim as optim
-from src.conv_net import conv_net
+from conv_net import conv_net
 import numpy as np
 
 
@@ -22,12 +22,13 @@ class cnn():
         initial_state = list([[3,1,32,0,2]*max_layers][0]) #0 means yes to max_pool
         random_layer = [5,2,64,1,2]
         initial_state[5:10] = random_layer
+
         self.state = initial_state
         self.image_size = image_size
         self.original_image_size = image_size
         self.prev_channels = prev_channels
         self.num_classes = num_classes
-        self.max_layers= max_layers
+        self.max_layers = max_layers
         self.op_add = [lambda x: x+1, lambda x: x, lambda x: x-1]
         self.op_mul = [lambda x: x*2, lambda x: x, lambda x: x/2]
         self.epochs = epochs
