@@ -1,8 +1,8 @@
 """
 The train file has to coordinate the REINFORCE algorithm in the main function
 """
-from cnn import cnn
-from controller import controller
+from src.cnn import cnn
+from src.controller import controller
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -20,7 +20,10 @@ layers_limit = 15
 
 def print_action(action, layers):
     for i in range(layers):
-        print([a.item() for a in action[i*5:(i+1)*5]])
+        try:
+            print([a.item() for a in action[i * 5:(i + 1) * 5]])
+        except Exception as e:
+            print([a for a in action[i * 5:(i + 1) * 5]])
 
 
 def train():
@@ -41,7 +44,7 @@ def train():
         logits = []
 
         for step in range(num_steps):
-            action, logit = controller1.get_action(state) # what state?
+            action, logit = controller1.get_action(state, ep) # what state?
             print("Action: ")
             print_action(action, max_layers)
             new_state = cnn1.build_child_arch(action)
@@ -71,12 +74,12 @@ def load_data(batch_size = 16):
     transform = transforms.Compose(
         [transforms.ToTensor(),
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
+    trainset = torchvision.datasets.CIFAR10(root='../data', train=True,
                                             download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,
                                               shuffle=True, num_workers=0)
     
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
+    testset = torchvision.datasets.CIFAR10(root='../data', train=False,
                                            download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=4,
                                              shuffle=False, num_workers=0)
