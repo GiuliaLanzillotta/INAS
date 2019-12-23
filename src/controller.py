@@ -7,6 +7,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import math
+import numpy as np
+import random
 from torch.autograd import Variable
 
 #constants##
@@ -32,27 +34,52 @@ class controller(nn.Module):
             cells.append(cell5)
         self.cells = nn.ModuleList(cells) # better name: layers
         self.num_layers = 5*max_layers
-        self.optimizer = optim.Adam(self.parameters(), lr=1e-3)
-            
+        self.optimizer = optim.Adam(self.parameters(), lr=1e-5)
+        self.exploration = 0.90
+
+    def exponential_decayed_epsilon(self, step):
+        # Decay every decay_steps interval
+        decay_steps = 2
+        decay_rate = 0.9
+        return self.exploration * decay_rate ** (step / decay_steps)
+
     def forward(self, state):
         logits = []
         softmax = nn.Softmax(1)
-        
-        for i,cell in enumerate(self.cells):
-            state_i = torch.tensor(state[i],dtype=torch.float).view(1,1,1)
-            if(i==0):
-                output, hidden_states = cell(state_i)
+
+        for i, cell in enumerate(self.cells):
+            # state_i = torch.tensor(state[i], dtype=torch.float).view(1,1,1)
+            if (i == 0):
+                output, hidden_states = cell(torch.tensor(state[i], dtype=torch.float).view(1, 1, 1))
+                for element in hidden_states:
+                    element.clone().detach().requires_grad_(True)
             else:
-                output, hidden_states = cell(state_i,hidden_states)
-            output = output.reshape(1,3) # this is the logit
+                output, hidden_states = cell(
+                    torch.tensor(state[i], dtype=torch.float).view(1, 1, 1).clone().detach().requires_grad_(True),
+                    hidden_states)
+                for element in hidden_states:
+                    element.clone().detach().requires_grad_(True)
+            output = output.reshape(1, 3)  # this is the logit
             logit = softmax(output)
             logits.append(logit)
         return logits
 
-    def get_action(self, state): # state = sequence of length 5 times number of layers
+    def get_action(self, state, ep):  # state = sequence of length 5 times number of layers
+        # if (np.random.random() < self.exponential_decayed_epsilon(ep)) and (ep > 0):
+
         logits = self.forward(state)
-        actions = [torch.argmax(logit) for logit in logits]      
-        return actions,logits 
+
+        if np.random.random() < self.exponential_decayed_epsilon(ep):
+            rand = random.randrange(0, 3, 1)
+            actions = [random.randrange(0, 3, 1) for logit in logits]
+            new_logits = []
+            for logit, action in zip(logits,actions):
+                new_logits.append(logit[0][action])
+            logits = new_logits
+        else:
+            actions = [torch.argmax(logit) for logit in logits]
+            logits = [logit[0][torch.argmax(logit)] for logit in logits]
+        return actions, logits
     
     # REINFORCE
     def update_policy(self, rewards, logits):
@@ -75,7 +102,6 @@ class controller(nn.Module):
         # logits is a list of lists where the outer contains all steps taken, the inner for a given step length  has 10 elements where each element is a tensor of length 3
         for logit, Gt in zip(logits, discounted_rewards):
             for element in logit:
-                element = torch.max(element)
                 policy_gradient.append(-1.0 * torch.log(element) * Gt)
                 # for index in range(3):
                 #     policy_gradient.append(-1.0 * torch.log(element[0, index].type(torch.float)) * Gt)

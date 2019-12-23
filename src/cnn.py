@@ -129,6 +129,7 @@ class cnn():
                     class_total[label] += 1
 
 
+
         reward = sum(class_correct)/sum(class_total)
         
         return reward
