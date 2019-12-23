@@ -80,17 +80,19 @@ class controller(nn.Module):
 
     def get_action(self, state, ep): # state = sequence of length 5 times number of layers
         # if (np.random.random() < self.exponential_decayed_epsilon(ep)) and (ep > 0):
+
+        logits = self.forward(state)
+
         if np.random.random() < self.exponential_decayed_epsilon(ep):
-            logits = []
-            for _ in range(len(state)):
-                logit = torch.zeros((1, 3), requires_grad=True)
-                with torch.no_grad():
-                    logit[0, random.randrange(0, 3, 1)] = 1
-                logits.append(logit)
-            actions = [torch.argmax(logit) for logit in logits]
+            rand = random.randrange(0, 3, 1)
+            actions = [random.randrange(0, 3, 1) for logit in logits]
+            new_logits = []
+            for logit, action in zip(logits,actions):
+                new_logits.append(logit[0][action])
+            logits = new_logits
         else:
-            logits = self.forward(state)
             actions = [torch.argmax(logit) for logit in logits]
+            logits = [logit[0][torch.argmax(logit)] for logit in logits]
         return actions, logits
 
     # REINFORCE
