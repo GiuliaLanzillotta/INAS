@@ -70,6 +70,7 @@ class controller(nn.Module):
         logits = self.forward(state)
 
         if np.random.random() < self.exponential_decayed_epsilon(ep):
+            print("Exploring...")
             rand = random.randrange(0, 3, 1)
             actions = [random.randrange(0, 3, 1) for logit in logits]
             new_logits = []
