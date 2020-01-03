@@ -89,13 +89,14 @@ class controller(nn.Module):
             Gt = 0 
             pw = 0
             for r in rewards[t:]:
+                r = r**3
                 Gt = Gt + GAMMA**pw * r
                 pw = pw + 1
             discounted_rewards.append(Gt)
             
         discounted_rewards = torch.tensor(discounted_rewards)
         #discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-4) # normalize discounted rewards
-    
+
         policy_gradient = []
         # logits = torch.tensor(logits)
         # logits = logits.flatten(1,-1)
