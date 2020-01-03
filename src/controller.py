@@ -12,7 +12,7 @@ import random
 from torch.autograd import Variable
 
 #constants##
-GAMMA = 0.9
+GAMMA = 1
 
 class controller(nn.Module):
 

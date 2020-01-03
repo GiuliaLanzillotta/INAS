@@ -8,6 +8,7 @@ from torch import nn
 import torch.optim as optim
 from src.conv_net import conv_net
 import numpy as np
+from tqdm import tqdm
 
 max_layers = 10
 
@@ -90,9 +91,10 @@ class cnn():
         data_loader_train, data_loader_test = data_loader
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(self.net.parameters(), lr=0.001, momentum=0.9)
+        #training_batches =  len(data_loader_train)/3       FOR TQDM!
         for epoch in range(self.epochs):  # loop over the dataset multiple times
             running_loss = 0.0
-            for i, data in enumerate(data_loader_train, 0):
+            for i, data in enumerate(data_loader_train,0):
                 # get the inputs; data is a list of [inputs, labels]
                 inputs, labels = data
                 inputs, labels = inputs.to(device), labels.to(device)
@@ -105,12 +107,13 @@ class cnn():
                 loss = criterion(outputs, labels)
                 loss.backward()
                 optimizer.step()
-        
+
                 # print statistics
                 running_loss += loss.item()
-
-
-
+                if i % 5000 == 4999:  # print every 2840 because of batchsize -> 4
+                    print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5000))
+                if i % 5000 == 4999:
+                    break
 
         print('Finished Training')
         

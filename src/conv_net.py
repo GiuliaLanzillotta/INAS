@@ -4,7 +4,7 @@ import torch
 
 class conv_net(nn.Module):
 
-    def __init__(self, conv_layers, input_size=32, prev_channels=3, n_class=10, device = 'cuda'):
+    def __init__(self, conv_layers, input_size=28, prev_channels=1, n_class=10, device = 'cuda'):
         super(conv_net, self).__init__()
 
         self.input_size = input_size
