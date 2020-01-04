@@ -34,7 +34,7 @@ class controller(nn.Module):
             cells.append(cell5)
         self.cells = nn.ModuleList(cells) # better name: layers
         self.num_layers = 5*max_layers
-        self.optimizer = optim.Adam(self.parameters(), lr=1e-5)
+        self.optimizer = optim.Adam(self.parameters(), lr=5e-4)
         self.exploration = 0.90
 
     def exponential_decayed_epsilon(self, step):

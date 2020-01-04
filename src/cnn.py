@@ -22,6 +22,21 @@ class cnn():
         # Droput? Use same padding for now. 
         # (We may have to change the image_size if we use same)
         initial_state = list([[3,1,32,0,2]*max_layers][0])#*max_layers #0 means yes to max_pool
+        # initial_state = [3, 1, 32, 2, 2,
+        #                  3, 1, 32, 2, 2,
+        #                  3, 1, 64, 2, 2,
+        #                  3, 1, 64, 0, 2,
+        #                  3, 1, 128, 2, 2,
+        #                  3, 1, 128, 2, 2,
+        #                  3, 1, 256, 2, 2,
+        #                  3, 1, 256, 0, 2,
+        #                  3, 1, 512, 2, 2,
+        #                  3, 1, 512, 2, 2,
+        #                  3, 1, 256, 2, 2,
+        #                  3, 1, 256, 2, 2,
+        #                  3, 1, 256, 0, 2,
+        #                  3, 1, 256, 2, 2,
+        #                  3, 1, 256, 0, 2,]
         self.state = initial_state
         self.image_size = image_size
         self.original_image_size = image_size
@@ -91,6 +106,7 @@ class cnn():
         data_loader_train, data_loader_test = data_loader
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(self.net.parameters(), lr=0.001, momentum=0.9)
+        schedular = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.5)
         #training_batches =  len(data_loader_train)/3       FOR TQDM!
         for epoch in range(self.epochs):  # loop over the dataset multiple times
             running_loss = 0.0
@@ -107,6 +123,7 @@ class cnn():
                 loss = criterion(outputs, labels)
                 loss.backward()
                 optimizer.step()
+                schedular.step()
 
                 # print statistics
                 running_loss += loss.item()

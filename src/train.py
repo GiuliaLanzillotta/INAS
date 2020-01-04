@@ -40,7 +40,7 @@ def train():
     data_loader = load_data_MNIST()
     controller1 = controller(max_layers)
     t1 = time()
-    rewards_history = pd.DataFrame
+    rewards_history = pd.DataFrame()
     for ep in range(num_episodes):
         print("-----------------------------------------------")
         print("Episode ", ep)
@@ -62,10 +62,10 @@ def train():
             print("Reward: ", reward)
             print("New state: ", new_state)
             print("****************")
-        rewards_history= rewards_history.append([rewards])
+        rewards_history = rewards_history.append(rewards)
         controller1.update_policy(rewards, logits)
         t2 = time()
-        rewards_history.to_csv("rewards.csv")
+        rewards_history.to_csv("rewards_{}.csv".format(t1))
         print("Elapsed time: ", t2-t1)
 
 def load_data_CIFAR(batch_size = 4):
@@ -74,12 +74,12 @@ def load_data_CIFAR(batch_size = 4):
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                             download=True, transform=transform)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=16,
                                               shuffle=True, num_workers=0)
     
     testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                            download=True, transform=transform)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=4,
+    testloader = torch.utils.data.DataLoader(testset, batch_size=16,
                                              shuffle=False, num_workers=0)
     return trainloader, testloader
 

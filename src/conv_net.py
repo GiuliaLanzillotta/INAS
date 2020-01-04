@@ -41,7 +41,7 @@ class conv_net(nn.Module):
 
         self.prev_fc_size = int(int(prev_channels) * img_dim * img_dim)
 
-        layers += [nn.Dropout(0.2),
+        layers += [nn.Dropout(0.3),
                    nn.Linear(self.prev_fc_size, 200),
                    nn.ELU(),
                    nn.Linear(200, n_class)
