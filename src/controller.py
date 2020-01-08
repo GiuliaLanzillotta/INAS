@@ -21,7 +21,7 @@ import random
 from torch.autograd import Variable
 
 #constants##
-GAMMA = 0.9
+GAMMA = 1.0
 
 class controller(nn.Module):
 
@@ -67,11 +67,18 @@ class controller(nn.Module):
         return logits
     
     def add_layer(self):
-        self.cells = self.cells.append(self.cells[0])
-        self.cells = self.cells.append(self.cells[1])
-        self.cells = self.cells.append(self.cells[2])
-        self.cells = self.cells.append(self.cells[3])
-        self.cells = self.cells.append(self.cells[4])
+        # self.cells = self.cells.append(self.cells[0])
+        # self.cells = self.cells.append(self.cells[1])
+        # self.cells = self.cells.append(self.cells[2])
+        # self.cells = self.cells.append(self.cells[3])
+        # self.cells = self.cells.append(self.cells[4])
+
+        self.cells = self.cells.append(nn.LSTM(input_size=1, hidden_size=3, num_layers=1))
+        self.cells = self.cells.append(nn.LSTM(input_size=1, hidden_size=3, num_layers=1))
+        self.cells = self.cells.append(nn.LSTM(input_size=1, hidden_size=3, num_layers=1))
+        self.cells = self.cells.append(nn.LSTM(input_size=1, hidden_size=3, num_layers=1))
+        self.cells = self.cells.append(nn.LSTM(input_size=1, hidden_size=3, num_layers=1))
+
 
     def exponential_decayed_epsilon(self, step):
         # Decay every decay_steps interval
@@ -82,6 +89,7 @@ class controller(nn.Module):
     def get_action(self, state, ep): # state = sequence of length 5 times number of layers
         # if (np.random.random() < self.exponential_decayed_epsilon(ep)) and (ep > 0):
         if np.random.random() < self.exponential_decayed_epsilon(ep):
+            print("Generated random action")
             logits = []
             random_logits = []
             for _ in range(len(state)):

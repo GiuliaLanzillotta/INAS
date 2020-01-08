@@ -6,7 +6,7 @@ and save the current architecture
 import torch
 from torch import nn
 import torch.optim as optim
-from conv_net import conv_net
+from src.conv_net import conv_net
 import numpy as np
 
 
@@ -14,14 +14,18 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class cnn():
 
-    def __init__(self, max_layers, image_size, prev_channels, num_classes, num_steps, epochs=1):
+    def __init__(self, max_layers, image_size, prev_channels, num_classes, num_steps, epochs=25):
         #TODO
         # size of filter, stride, channels, maxpool(boolean), max_pool_size
         # Droput? Use same padding for now. 
         # (We may have to change the image_size if we use same)
-        initial_state = list([[3,1,32,0,2]*max_layers][0]) #0 means yes to max_pool
-        random_layer = [5,2,64,1,2]
-        initial_state[5:10] = random_layer
+        # initial_state = list([[3,1,32,0,2]*max_layers][0]) #0 means yes to max_pool
+        initial_state = list([3,1,32,2,2,3,1,32,0,2,3,1,64,2,2,3,1,64,0,2,3,1,128,2,2,3,1,128,0,2])
+        if max_layers > 6:
+            initial_state = initial_state.append(list([[3,1,128,0,2]*(max_layers - 6)][0]))
+
+        # random_layer = [5,2,64,1,2]
+        # initial_state[5:10] = random_layer
 
         self.state = initial_state
         self.image_size = image_size
@@ -41,15 +45,20 @@ class cnn():
     
     def update_image_size(self, state):
         n = self.image_size
-        k = state[0]  # filter_size
+        k = state[4]  # filter_size
         s = 1                   # stride
-        return (n-k)/s + 1
+        if state[3] == 2:
+            return self.image_size
+        else:
+            return (n-k)/s + 1
     
 
     def build_child_arch(self, action):
         #TODO
         #max_pool, cnn or avg_pool
         state = []
+        self.image_size = 32
+
         for layer in range(self.max_layers):
             action0 = action[0+layer*5]
             action1 = action[1+layer*5]
@@ -64,7 +73,7 @@ class cnn():
             layer_state = [state0,state1,state2,state3,state4]
             layer_state = self.check_state(layer_state, layer)
             state.extend(layer_state)
-            self.image_size = self.update_image_size(layer_state)
+            # self.image_size = self.update_image_size(layer_state)
 
         self.net = conv_net(state, input_size=self.original_image_size, prev_channels = self.prev_channels, n_class=self.num_classes,device = self.device)
         self.net = self.net.to(device)
@@ -74,21 +83,32 @@ class cnn():
     
     def check_state(self, state, layer):
         self.count_bounds = 0
-        padding = np.ceil(((state[1]-1)*self.image_size - state[1] + state[0])/2)
+        # padding = np.ceil(((state[1]-1)*self.image_size - state[1] + state[0])/2)
+        padding = int(np.ceil(((self.image_size - 1) * state[1] - self.image_size + state[0]) / 2))
+
         # 0:size of filter, 1:stride, 2:channels, 3:maxpool(boolean), 4:max_pool_size
         # We must be careful about everything except 3: maxpool(boolean)
         if (state[0]<=0 or state[0]>self.image_size):
             state[0] = self.state[0+layer*5]
-            self.count_bounds = self.count_bounds + 1
+            self.count_bounds = self.count_bounds + 0.1
+            print("Kernel size is out of bounds")
         if (state[1]<=0 or state[1]>self.image_size + padding - state[0]): # add later 
             state[1] = self.state[1+layer*5]
-            self.count_bounds = self.count_bounds + 1
-        if (state[2]<=0 or state[2] > 1024): # later, penalty for the running time
+            self.count_bounds = self.count_bounds + 0.1
+            print("Stride is out of bounds")
+        if (state[2]<1.0 or state[2] > 1024): # later, penalty for the running time
             state[2] = self.state[2+layer*5]
-            self.count_bounds = self.count_bounds + 1
+            self.count_bounds = self.count_bounds + 0.1
+            print("Channel size is out of bounds")
         if (state[4]<=0 or state[4] >= self.image_size):
-            state[4] = self.state[4+layer*5]
-            self.count_bounds = self.count_bounds + 1
+            if self.state[4+layer*5] >= self.image_size:
+                state[4] = 1
+            else:
+                state[4] = self.state[4+layer*5]
+            self.count_bounds = self.count_bounds + 0.1
+            print("Pool size is out of bounds")
+
+        self.image_size = self.image_size - state[4] + 1
         
         return state
 
@@ -96,6 +116,7 @@ class cnn():
         data_loader_train, data_loader_test = data_loader
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(self.net.parameters(), lr=0.001, momentum=0.9)
+
         for epoch in range(self.epochs):  # loop over the dataset multiple times
             running_loss = 0.0
             for i, data in enumerate(data_loader_train, 0):
@@ -118,47 +139,61 @@ class cnn():
                     print('[%d, %5d] loss: %.3f' %
                           (epoch + 1, i + 1, running_loss / 2000))
                     running_loss = 0.0
-                if i == 2999:
+                if i == 1250:
                     break
 
         print('Finished Training')
         
-        class_correct = list(0. for i in range(self.num_classes))
-        class_total = list(0. for i in range(self.num_classes))
+        # class_correct = list(0. for i in range(self.num_classes))
+        # class_total = list(0. for i in range(self.num_classes))
+
+        correct = 0
+        total = 0
         with torch.no_grad():
             for data in data_loader_test:
                 images, labels = data
                 images, labels = images.to(device), labels.to(device)
                 outputs = self.net(images)
                 _, predicted = torch.max(outputs, 1)
-                c = (predicted == labels).squeeze()
-                for i in range(4):
-                    label = labels[i]
-                    class_correct[label] += c[i].item()
-                    class_total[label] += 1
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
 
-        Accuracy = 0
-        for i in range(10):
-            Accuracy = Accuracy + 100 * class_correct[i] / class_total[i]
-        Average_Accuracy = Accuracy / 10
+        reward = correct / total
+        # with torch.no_grad():
+        #     for data in data_loader_test:
+        #         images, labels = data
+        #         images, labels = images.to(device), labels.to(device)
+        #         outputs = self.net(images)
+        #         _, predicted = torch.max(outputs, 1)
+        #         c = (predicted == labels).squeeze()
+        #         for i in range(4):
+        #             label = labels[i]
+        #             class_correct[label] += c[i].item()
+        #             class_total[label] += 1
+        #
+        # Accuracy = 0
+        # for i in range(10):
+        #     Accuracy = Accuracy + 100 * class_correct[i] / class_total[i]
+        # Average_Accuracy = Accuracy / 10
 
-        reward = sum(class_correct)/sum(class_total)
-        self.avg_acc.append(Average_Accuracy)
+        # reward = sum(class_correct)/sum(class_total)
+        # self.avg_acc.append(Average_Accuracy)
 
-        if step % 2 == 0 and step > 0:
-            print("The current step is", step)
-            print("Length of avg_acc", len(self.avg_acc))
-            # if self.avg_acc[step] < 0.95 and  self.avg_acc[step] < self.avg_acc[step - 2] - 0.1:
-            if reward < 0.95 and reward < rewards_averaged_per_ep[step - 2] - 0.1:
-                self.count_acc = self.count_acc + 2
-            elif reward < 0.95 and reward < rewards_averaged_per_ep[step - 2] - 0.05:
-                self.count_acc = self.count_acc + 1
+        # if step % 2 == 0 and step > 0:
+        #     # if self.avg_acc[step] < 0.95 and  self.avg_acc[step] < self.avg_acc[step - 2] - 0.1:
+        #     if reward < 0.85 and reward < rewards_averaged_per_ep[step - 2] - 0.01:
+        #         self.count_acc = self.count_acc + 2
+        #         print("Accuracy not improving by 0.01")
+        #     elif reward < 0.95 and reward < rewards_averaged_per_ep[step - 2] - 0.05:
+        #         self.count_acc = self.count_acc + 1
+        #         print("Accuracy not improving by 0.05")
 
-        if self.count_acc >= 1 or self.count_bounds >= 1:
-            reward = reward * -1.0 * (self.count_bounds + self.count_acc)
+        if self.count_bounds > 0:
+            reward = reward * -1.0 * (self.count_bounds)
 
+        reward = np.clip(reward, -1.0, 1.0)
         self.count_acc = 0
         self.count_bounds = 0
 
-        return reward
+        return reward, self.net
 
