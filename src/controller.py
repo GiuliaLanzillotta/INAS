@@ -11,10 +11,32 @@ import numpy as np
 import random
 from torch.autograd import Variable
 
+from torch_geometric.nn import GCNConv, ChebConv  # noqa
+
 #constants##
 GAMMA = 1
+FEATURES =
 
 class controller(nn.Module):
+
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = GCNConv(dataset.num_features, 16, cached=True,
+                             normalize=not args.use_gdc)
+        self.conv2 = GCNConv(16, dataset.num_classes, cached=True,
+                             normalize=not args.use_gdc)
+        # self.conv1 = ChebConv(data.num_features, 16, K=2)
+        # self.conv2 = ChebConv(16, data.num_features, K=2)
+
+        self.reg_params = self.conv1.parameters()
+        self.non_reg_params = self.conv2.parameters()
+
+    def forward(self):
+        x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
+        x = F.relu(self.conv1(x, edge_index, edge_weight))
+        x = F.dropout(x, training=self.training)
+        x = self.conv2(x, edge_index, edge_weight)
+        return F.log_softmax(x, dim=1)
 
     def __init__(self, max_layers): # x is a state
         #TODO: create controller architecture

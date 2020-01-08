@@ -8,7 +8,7 @@ from torch import nn
 import torch.optim as optim
 from src.conv_net import conv_net
 import numpy as np
-from tqdm import tqdm
+
 
 max_layers = 10
 
