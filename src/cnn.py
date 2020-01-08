@@ -51,8 +51,10 @@ class cnn():
     
     def update_image_size(self, state):
         n = self.image_size
-        k = state[0]  # filter_size
-        s = 1                   # stride
+        if state[3]==2:
+            return n
+        k = state[4]  # filter_size
+        s = 1  # stride
         return (n-k)/s + 1
     
 

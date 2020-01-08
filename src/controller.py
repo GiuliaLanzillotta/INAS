@@ -68,18 +68,15 @@ class controller(nn.Module):
         # if (np.random.random() < self.exponential_decayed_epsilon(ep)) and (ep > 0):
 
         logits = self.forward(state)
-
+        exp=False
         if np.random.random() < self.exponential_decayed_epsilon(ep):
-            rand = random.randrange(0, 3, 1)
-            actions = [random.randrange(0, 3, 1) for logit in logits]
-            new_logits = []
-            for logit, action in zip(logits,actions):
-                new_logits.append(logit[0][action])
-            logits = new_logits
+            exp = True
+            actions = [torch.argmin(logit) for logit in logits]
+            logits = [logit[0][torch.argmax(logit)] for logit in logits]
         else:
             actions = [torch.argmax(logit) for logit in logits]
             logits = [logit[0][torch.argmax(logit)] for logit in logits]
-        return actions, logits
+        return actions, logits, exp
     
     # REINFORCE
     def update_policy(self, rewards, logits):
