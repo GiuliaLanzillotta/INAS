@@ -62,6 +62,7 @@ class cnn():
         #TODO
         #max_pool, cnn or avg_pool
         state = []
+        self.image_size=self.original_image_size
         for layer in range(self.max_layers):
             action0 = action[0+layer*5]
             action1 = action[1+layer*5]
