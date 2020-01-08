@@ -7,10 +7,11 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import pandas as pd
+import datetime
 
 # This means that we're only looking at squared images for now.
-image_size = 28
-prev_channels = 1
+image_size = 32
+prev_channels = 3
 num_classes = 10
 from time import time
 
@@ -34,13 +35,17 @@ def print_state(action, layers):
 
 def train():
     #with tf.name_scope("train"):
-    num_episodes = 100
-    num_steps = 10
+    num_episodes = 10
+    num_steps = 20
     max_layers = 15
-    data_loader = load_data_MNIST()
+
+    data_loader = load_data_CIFAR()
     controller1 = controller(max_layers)
     t1 = time()
+    save_time = datetime.datetime.now()
+
     rewards_history = pd.DataFrame()
+    states_history = pd.DataFrame()
     for ep in range(num_episodes):
         print("-----------------------------------------------")
         print("Episode ", ep)
@@ -53,33 +58,37 @@ def train():
             #print("Action: ")
             #print_action(action, max_layers)
             new_state = cnn1.build_child_arch(action)
+            print("New state: ", new_state)
             reward = cnn1.get_reward(data_loader) #already have new_state updated
             state = new_state
             logits.append(logit)
             rewards.append(reward)
+            states_history = states_history.append([new_state])
+            states_history.to_csv("Steps=1_states_{}.csv".format(save_time))
             print("****************")
             print("Step",ep,":",step)
             print("Reward: ", reward)
-            print("New state: ", new_state)
             print("****************")
+
+
         rewards_history = rewards_history.append(rewards)
         controller1.update_policy(rewards, logits)
         t2 = time()
-        rewards_history.to_csv("rewards_{}.csv".format(t1))
+        rewards_history.to_csv("Steps=1_rewards_{}.csv".format(save_time))
         print("Elapsed time: ", t2-t1)
 
 def load_data_CIFAR(batch_size = 4):
     transform = transforms.Compose(
         [transforms.ToTensor(),
-         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))])
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                             download=True, transform=transform)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=16,
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=64,
                                               shuffle=True, num_workers=0)
     
     testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                            download=True, transform=transform)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=16,
+    testloader = torch.utils.data.DataLoader(testset, batch_size=64,
                                              shuffle=False, num_workers=0)
     return trainloader, testloader
 

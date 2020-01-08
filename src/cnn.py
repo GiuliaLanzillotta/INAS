@@ -16,12 +16,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class cnn():
 
-    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=5):
+    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=25):
         #TODO
         # size of filter, stride, channels, maxpool(boolean), max_pool_size
         # Droput? Use same padding for now. 
         # (We may have to change the image_size if we use same)
-        initial_state = list([[3,1,32,0,2]*max_layers][0])#*max_layers #0 means yes to max_pool
+        initial_state = list([[3,1,32,2,2]*max_layers][0])#*max_layers #0 means yes to max_pool
         # initial_state = [3, 1, 32, 2, 2,
         #                  3, 1, 32, 2, 2,
         #                  3, 1, 64, 2, 2,
@@ -93,7 +93,7 @@ class cnn():
         if (state[1]<1 or state[1]>self.image_size + padding - state[0]): # add later
             state[1] = self.state[1+layer*5]
             count = count+1
-        if (state[2]<1 or state[2] > 1024): # later, penalty for the running time
+        if (state[2]<1 or state[2] > 128): # later, penalty for the running time
             state[2] = self.state[2+layer*5]
             count = count+1
         if (state[4]<1 or state[4] >= self.image_size):
@@ -105,8 +105,9 @@ class cnn():
     def get_reward(self, data_loader):
         data_loader_train, data_loader_test = data_loader
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(self.net.parameters(), lr=0.001, momentum=0.9)
-        schedular = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.5)
+        optimizer = optim.SGD(self.net.parameters(), lr=0.005, weight_decay = 0.0005, momentum=0.9, nesterov= True)
+        #optimizer = torch.optim.RMSprop(self.net.parameters(), lr = 0.003, momentum = 0.9, eps= 1.e-07)
+        schedular = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.8)
         #training_batches =  len(data_loader_train)/3       FOR TQDM!
         for epoch in range(self.epochs):  # loop over the dataset multiple times
             running_loss = 0.0
@@ -123,34 +124,40 @@ class cnn():
                 loss = criterion(outputs, labels)
                 loss.backward()
                 optimizer.step()
-                schedular.step()
+
 
                 # print statistics
                 running_loss += loss.item()
-                if i % 5000 == 4999:  # print every 2840 because of batchsize -> 4
-                    print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5000))
-                if i % 5000 == 4999:
+                if i % 300 == 299:  # print every 2840 because of batchsize -> 4
+                    print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 300))
+                    running_loss = 0.0
+                if i % 800 == 799:
                     break
+            schedular.step()
 
         print('Finished Training')
         
-        class_correct = list(0. for i in range(self.num_classes))
-        class_total = list(0. for i in range(self.num_classes))
+        # class_correct = list(0. for i in range(self.num_classes))
+        # class_total = list(0. for i in range(self.num_classes))
+        correct = 0
+        total = 0
         with torch.no_grad():
             for data in data_loader_test:
                 images, labels = data
                 images, labels = images.to(device), labels.to(device)
                 outputs = self.net(images)
                 _, predicted = torch.max(outputs, 1)
-                c = (predicted == labels).squeeze()
-                for i in range(4):
-                    label = labels[i]
-                    class_correct[label] += c[i].item()
-                    class_total[label] += 1
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+                # c = (predicted == labels).squeeze()
+                # for i in range(64):
+                #     label = labels[i]
+                #     class_correct[label] += c[i].item()
+                #     class_total[label] += 1
 
 
-
-        reward = sum(class_correct)/sum(class_total)
+        reward = correct / total
+        #reward = sum(class_correct)/sum(class_total)
         
         return reward
 
