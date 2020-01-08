@@ -72,7 +72,7 @@ class controller(nn.Module):
         if np.random.random() < self.exponential_decayed_epsilon(ep):
             exp = True
             actions = [torch.argmin(logit) for logit in logits]
-            logits = [logit[0][torch.argmax(logit)] for logit in logits]
+            logits = [logit[0][torch.argmin(logit)] for logit in logits]
         else:
             actions = [torch.argmax(logit) for logit in logits]
             logits = [logit[0][torch.argmax(logit)] for logit in logits]
