@@ -10,7 +10,7 @@ import math
 import numpy as np
 import random
 from torch.autograd import Variable
-
+from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv, ChebConv  # noqa
 
 #constants##
@@ -19,72 +19,61 @@ FEATURES =
 
 class controller(nn.Module):
 
-    def __init__(self):
+    def __init__(self, num_features, layers, dimension=16):
         super(Net, self).__init__()
-        self.conv1 = GCNConv(dataset.num_features, 16, cached=True,
-                             normalize=not args.use_gdc)
-        self.conv2 = GCNConv(16, dataset.num_classes, cached=True,
-                             normalize=not args.use_gdc)
+        self.conv1 = GCNConv(num_features, dimension, cached=True,
+                             normalize=True)
+        """normalize (bool, optional) – Whether to add self-loops and 
+        apply symmetric normalization. (default: True)"""
+        self.conv2 = GCNConv(num_features, dimension, cached=True,
+                             normalize=True)
         # self.conv1 = ChebConv(data.num_features, 16, K=2)
         # self.conv2 = ChebConv(16, data.num_features, K=2)
-
+        self.layers = layers
+        self.optimizer = optim.Adam(self.parameters(), lr=5e-4)
+        self.exploration = 0.90
         self.reg_params = self.conv1.parameters()
         self.non_reg_params = self.conv2.parameters()
 
-    def forward(self):
+
+    def build_graph_from_state(self, state):
+        """Building a graph from the state ( list of numbers). """
+        edge_index = []
+        for l in range(self.layers):
+            edge_index.append([5 * l + 1, 5 * l + 2])
+            edge_index.append([5 * l + 1, 5 * l + 5])
+            edge_index.append([5 * l + 3, 5 * l + 5])
+            edge_index.append([5 * l + 3, 5 * l + 4])
+            edge_index.append([5 * l + 2, 5 * l + 1])
+            edge_index.append([5 * l + 5, 5 * l + 1])
+            edge_index.append([5 * l + 5, 5 * l + 3])
+            edge_index.append([5 * l + 4, 5 * l + 3])
+            if (l != 0):
+                edge_index.append([5 * l + 3, 5 * (l-1) + 3])
+                edge_index.append([5 * l + 4, 5 * (l-1) + 4])
+                edge_index.append([5 * l + 5, 5 * (l-1) + 5])
+
+        edge_index = torch.tensor(edge_index, dtype=torch.long)
+        x = torch.tensor(state, dtype=torch.float)
+
+        data = Data(x=x, edge_index=edge_index.t().contiguous())
+        return data
+
+    def forward(self, state):
+        """State is a sequence of numbers. It first has to be transalted into the
+        graph and packaged into a data object. Then it can be forwarded."""
+        data = self.build_graph_from_state(state)
         x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
         x = F.relu(self.conv1(x, edge_index, edge_weight))
         x = F.dropout(x, training=self.training)
         x = self.conv2(x, edge_index, edge_weight)
         return F.log_softmax(x, dim=1)
 
-    def __init__(self, max_layers): # x is a state
-        #TODO: create controller architecture
-        super(controller,self).__init__()
-        
-        cells = []
-        for layer in range(max_layers):
-            cell1 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell2 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell3 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell4 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell5 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cells.append(cell1)
-            cells.append(cell2)
-            cells.append(cell3)
-            cells.append(cell4)
-            cells.append(cell5)
-        self.cells = nn.ModuleList(cells) # better name: layers
-        self.num_layers = 5*max_layers
-        self.optimizer = optim.Adam(self.parameters(), lr=5e-4)
-        self.exploration = 0.90
-
     def exponential_decayed_epsilon(self, step):
         # Decay every decay_steps interval
         decay_steps = 2
         decay_rate = 0.9
         return self.exploration * decay_rate ** (step / decay_steps)
-
-    def forward(self, state):
-        logits = []
-        softmax = nn.Softmax(1)
-
-        for i, cell in enumerate(self.cells):
-            # state_i = torch.tensor(state[i], dtype=torch.float).view(1,1,1)
-            if (i == 0):
-                output, hidden_states = cell(torch.tensor(state[i], dtype=torch.float).view(1, 1, 1))
-                for element in hidden_states:
-                    element.clone().detach().requires_grad_(True)
-            else:
-                output, hidden_states = cell(
-                    torch.tensor(state[i], dtype=torch.float).view(1, 1, 1).clone().detach().requires_grad_(True),
-                    hidden_states)
-                for element in hidden_states:
-                    element.clone().detach().requires_grad_(True)
-            output = output.reshape(1, 3)  # this is the logit
-            logit = softmax(output)
-            logits.append(logit)
-        return logits
 
     def get_action(self, state, ep):  # state = sequence of length 5 times number of layers
         # if (np.random.random() < self.exponential_decayed_epsilon(ep)) and (ep > 0):
