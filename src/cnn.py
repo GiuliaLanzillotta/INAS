@@ -8,7 +8,6 @@ from torch import nn
 import torch.optim as optim
 from src.conv_net import conv_net
 import numpy as np
-from tqdm import tqdm
 
 max_layers = 10
 
@@ -131,9 +130,6 @@ class cnn():
 
                 # print statistics
                 running_loss += loss.item()
-                if i % 300 == 299:  # print every 2840 because of batchsize -> 4
-                    print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 300))
-                    running_loss = 0.0
                 if i % 800 == 799:
                     break
             schedular.step()

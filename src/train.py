@@ -36,7 +36,7 @@ def print_state(action, layers):
 def train():
     #with tf.name_scope("train"):
     num_episodes = 10
-    num_steps = 20
+    num_steps = 10
     max_layers = 15
 
     data_loader = load_data_CIFAR()
@@ -55,13 +55,18 @@ def train():
         rewards = []
         logits = []
         exps = []
+        reward = 0
         for step in range(num_steps):
             action, logit, exploration = controller1.get_action(state, ep) # what state?
             #print("Action: ")
             #print_action(action, max_layers)
             new_state = cnn1.build_child_arch(action)
             print("New state: ", new_state)
-            reward = cnn1.get_reward(data_loader) #already have new_state updated
+            ## Trying to set the reward to the delta
+            ## in this way we encourage the controller to
+            ## always improve
+            ##reward = cnn1.get_reward(data_loader) - reward #already have new_state updated
+            reward = cnn1.get_reward(data_loader)
             state = new_state
             logits.append(logit)
             rewards.append(reward)
