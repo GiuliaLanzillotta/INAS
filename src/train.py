@@ -8,12 +8,13 @@ import torchvision
 import torchvision.transforms as transforms
 import pandas as pd
 import datetime
+from time import time
 
 # This means that we're only looking at squared images for now.
 image_size = 32
 prev_channels = 3
 num_classes = 10
-from time import time
+
 
 if torch.cuda.device_count() > 0:
     print("Let's use GPU computing")
@@ -35,8 +36,8 @@ def print_state(action, layers):
 
 def train():
     #with tf.name_scope("train"):
-    num_episodes = 10
-    num_steps = 20
+    num_episodes = 15
+    num_steps = 15
     max_layers = 15
 
     data_loader = load_data_CIFAR()
@@ -47,6 +48,10 @@ def train():
     rewards_history = pd.DataFrame()
     states_history = pd.DataFrame()
     exploration_history = pd.DataFrame()
+
+    best_reward = 0
+    best_state = []
+    best_action = []
     for ep in range(num_episodes):
         print("-----------------------------------------------")
         print("Episode ", ep)
@@ -62,12 +67,20 @@ def train():
             new_state = cnn1.build_child_arch(action)
             print("New state: ", new_state)
             reward = cnn1.get_reward(data_loader) #already have new_state updated
+
+            if reward > best_reward:
+                best_reward = reward
+                best_state = state
+                best_action = action
+                print("Best Architecture Updated")
+                print("State:", state)
+
             state = new_state
             logits.append(logit)
             rewards.append(reward)
             exps.append(exploration)
             states_history = states_history.append([new_state])
-            states_history.to_csv("Steps=1_states_{}.csv".format(save_time))
+            states_history.to_csv("states_{}.csv".format(t1))
             print("****************")
             print("Step",ep,":",step)
             print("Reward: ", reward)
@@ -77,9 +90,20 @@ def train():
         rewards_history = rewards_history.append(rewards)
         controller1.update_policy(rewards, logits)
         t2 = time()
-        rewards_history.to_csv("Steps=1_rewards_{}.csv".format(save_time))
-        exploration_history.to_csv("Exploration_{}.csv".format(save_time))
+        rewards_history.to_csv("rewards_{}.csv".format(t1))
+        exploration_history.to_csv("Exploration_{}.csv".format(t1))
         print("Elapsed time: ", t2-t1)
+
+    "The Best Architecture sampled"
+    print("Training NAS finished")
+    best_cnn = cnn(max_layers, image_size, prev_channels, num_classes,epochs=100)
+    useless_state = best_cnn.build_child_arch(best_action)
+    reward = best_cnn.get_reward(data_loader)
+    print("The Final CIFAR-10 Accuracy is {}".format(reward*100))
+    print("The Final Architecture is {}".format(best_state))
+
+
+
 
 def load_data_CIFAR(batch_size = 4):
     transform = transforms.Compose(

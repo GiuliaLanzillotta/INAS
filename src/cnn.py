@@ -16,7 +16,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class cnn():
 
-    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=25):
+    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=20):
         #TODO
         # size of filter, stride, channels, maxpool(boolean), max_pool_size
         # Droput? Use same padding for now. 
@@ -109,8 +109,10 @@ class cnn():
         data_loader_train, data_loader_test = data_loader
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(self.net.parameters(), lr=0.005, weight_decay = 0.0005, momentum=0.9, nesterov= True)
-        #optimizer = torch.optim.RMSprop(self.net.parameters(), lr = 0.003, momentum = 0.9, eps= 1.e-07)
-        schedular = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.8)
+        if self.epochs == 100:
+            schedular = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.7)
+        else:
+            schedular = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.8)
         #training_batches =  len(data_loader_train)/3       FOR TQDM!
         for epoch in range(self.epochs):  # loop over the dataset multiple times
             running_loss = 0.0

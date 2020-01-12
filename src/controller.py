@@ -52,13 +52,13 @@ class controller(nn.Module):
             if (i == 0):
                 output, hidden_states = cell(torch.tensor(state[i], dtype=torch.float).view(1, 1, 1))
                 for element in hidden_states:
-                    element.clone().detach().requires_grad_(True)
+                    element.requires_grad_(True)
             else:
                 output, hidden_states = cell(
                     torch.tensor(state[i], dtype=torch.float).view(1, 1, 1).clone().detach().requires_grad_(True),
                     hidden_states)
                 for element in hidden_states:
-                    element.clone().detach().requires_grad_(True)
+                    element.requires_grad_(True)
             output = output.reshape(1, 3)  # this is the logit
             logit = softmax(output)
             logits.append(logit)

@@ -31,11 +31,11 @@ class conv_net(nn.Module):
                     nn.Dropout(0.2)
                 ]
                 img_dim = self.update_size(img_dim, pooling_size, 1, 0)
-            if pooling==1:
-                layers += [
-                        nn.AvgPool2d(kernel_size = pooling_size, stride=1,padding=0)
-                ]
-                img_dim = self.update_size(img_dim, pooling_size, 1, 0)
+            # if pooling==1:
+            #     layers += [
+            #             nn.AvgPool2d(kernel_size = pooling_size, stride=1,padding=0)
+            #     ]
+            #     img_dim = self.update_size(img_dim, pooling_size, 1, 0)
 
             prev_channels = n_channels
         #layers += [nn.Flatten(1,-1)]
