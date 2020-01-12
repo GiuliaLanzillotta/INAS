@@ -162,7 +162,7 @@ class controller(nn.Module):
             Gt = 0 
             pw = 0
             for r in rewards[t:]:
-                r = r**3
+                r = r**(np.sign(r)*3)
                 Gt = Gt + GAMMA**pw * r
                 pw = pw + 1
             discounted_rewards.append(Gt)
