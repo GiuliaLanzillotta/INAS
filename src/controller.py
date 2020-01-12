@@ -64,19 +64,26 @@ class controller(nn.Module):
             logits.append(logit)
         return logits
 
-    def get_action(self, state, ep):  # state = sequence of length 5 times number of layers
+    def get_action(self, state, ep, train):  # state = sequence of length 5 times number of layers
         # if (np.random.random() < self.exponential_decayed_epsilon(ep)) and (ep > 0):
+        if train == False:
+            logits = self.forward(state)
+            exp=False
+            if np.random.random() < self.exponential_decayed_epsilon(ep):
+                exp = True
+                actions = [torch.argmin(logit) for logit in logits]
+                logits = [logit[0][torch.argmin(logit)] for logit in logits]
+            else:
+                actions = [torch.argmax(logit) for logit in logits]
+                logits = [logit[0][torch.argmax(logit)] for logit in logits]
+            return actions, logits, exp
 
-        logits = self.forward(state)
-        exp=False
-        if np.random.random() < self.exponential_decayed_epsilon(ep):
-            exp = True
-            actions = [torch.argmin(logit) for logit in logits]
-            logits = [logit[0][torch.argmin(logit)] for logit in logits]
-        else:
+        elif train == True:
+            logits = self.forward(state)
             actions = [torch.argmax(logit) for logit in logits]
             logits = [logit[0][torch.argmax(logit)] for logit in logits]
-        return actions, logits, exp
+            return actions, logits
+
     
     # REINFORCE
     def update_policy(self, rewards, logits):

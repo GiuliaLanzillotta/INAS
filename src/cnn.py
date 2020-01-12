@@ -16,7 +16,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class cnn():
 
-    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=20):
+    def __init__(self, max_layers, image_size, prev_channels, num_classes, train, epochs=20):
         #TODO
         # size of filter, stride, channels, maxpool(boolean), max_pool_size
         # Droput? Use same padding for now. 
@@ -38,6 +38,7 @@ class cnn():
                          3, 1, 128, 2, 2,
                          3, 1, 128, 0, 2]
         self.state = initial_state
+        self.train = train
         self.image_size = image_size
         self.original_image_size = image_size
         self.prev_channels = prev_channels
@@ -108,12 +109,13 @@ class cnn():
     def get_reward(self, data_loader):
         data_loader_train, data_loader_test = data_loader
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(self.net.parameters(), lr=0.005, weight_decay = 0.0005, momentum=0.9, nesterov= True)
-        if self.epochs == 100:
-            schedular = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.7)
+        if self.train == True:
+            optimizer = optim.SGD(self.net.parameters(), lr=0.005, weight_decay=0.0005, momentum=0.9, nesterov=True)
+            schedular = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.85)
         else:
-            schedular = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.8)
-        #training_batches =  len(data_loader_train)/3       FOR TQDM!
+            optimizer = optim.SGD(self.net.parameters(), lr=0.005, weight_decay=0.0005, momentum=0.9, nesterov=True)
+            schedular = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.8)
+
         for epoch in range(self.epochs):  # loop over the dataset multiple times
             running_loss = 0.0
             for i, data in enumerate(data_loader_train,0):
@@ -140,10 +142,8 @@ class cnn():
                     break
             schedular.step()
 
-        print('Finished Training')
-        
-        # class_correct = list(0. for i in range(self.num_classes))
-        # class_total = list(0. for i in range(self.num_classes))
+        print('Finished Training CNN')
+
         correct = 0
         total = 0
         with torch.no_grad():
@@ -154,15 +154,7 @@ class cnn():
                 _, predicted = torch.max(outputs, 1)
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
-                # c = (predicted == labels).squeeze()
-                # for i in range(64):
-                #     label = labels[i]
-                #     class_correct[label] += c[i].item()
-                #     class_total[label] += 1
-
 
         reward = correct / total
-        #reward = sum(class_correct)/sum(class_total)
-        
         return reward
 
