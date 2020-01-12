@@ -47,7 +47,15 @@ class cnn():
         self.epochs = epochs
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         return
-    
+
+    @staticmethod
+    def update_size(image_size, kernel_size, stride, padding):
+        return int((image_size - kernel_size + 2*padding)/stride + 1)
+
+    @staticmethod
+    def get_padding(image_size, kernel_size, stride):
+        return np.ceil(((kernel_size - 1) * image_size - stride + kernel_size) / 2)
+
     def update_image_size(self, state):
         n = self.image_size
         if state[3]==2:
@@ -76,7 +84,12 @@ class cnn():
             layer_state = [state0,state1,state2,state3,state4]
             layer_state, _ = self.check_state(layer_state, layer)
             state.extend(layer_state)
-            self.image_size = self.update_image_size(layer_state)
+            padding = self.get_padding(self.image_size, state[0], state[1])
+            #convolution
+            self.image_size = self.update_size(self.image_size, state[0], state[1], padding)
+            #pooling
+            if state[3]==2:
+                self.image_size = self.update_size(self.image_size, state[4], 1, 0)
 
         self.net = conv_net(state, input_size=self.original_image_size, prev_channels = self.prev_channels, n_class=self.num_classes,device = self.device)
         self.net = self.net.to(device)
@@ -86,7 +99,7 @@ class cnn():
     
     def check_state(self, state, layer):
         count = 0
-        padding = np.ceil(((state[1]-1)*self.image_size - state[1] + state[0])/2)
+        padding = self.get_padding(self.image_size, state[0], state[1])
         # 0:size of filter, 1:stride, 2:channels, 3:maxpool(boolean), 4:max_pool_size
         # We must be careful about everything except 3: maxpool(boolean)
         if (state[0]<1 or state[0]>self.image_size):
@@ -98,7 +111,10 @@ class cnn():
         if (state[2]<1 or state[2] > 128): # later, penalty for the running time
             state[2] = self.state[2+layer*5]
             count = count+1
-        if (state[4]<1 or state[4] >= self.image_size):
+        # reducing image size for convolution
+        padding = self.get_padding(self.image_size, state[0], state[1])
+        image_size = self.update_size(self.image_size, state[0], state[1], padding)
+        if (state[4]<1 or state[4] >= image_size):
             state[4] = self.state[4+layer*5]
             count = count+1
         
@@ -117,18 +133,13 @@ class cnn():
                 # get the inputs; data is a list of [inputs, labels]
                 inputs, labels = data
                 inputs, labels = inputs.to(device), labels.to(device)
-        
                 # zero the parameter gradients
                 optimizer.zero_grad()
-        
                 # forward + backward + optimize
                 outputs = self.net(inputs)
                 loss = criterion(outputs, labels)
                 loss.backward()
                 optimizer.step()
-
-
-                # print statistics
                 running_loss += loss.item()
                 if i % 800 == 799:
                     break

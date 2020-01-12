@@ -72,7 +72,7 @@ def train():
             rewards.append(reward)
             exps.append(exploration)
             states_history = states_history.append([new_state])
-            states_history.to_csv("Steps=1_states_{}.csv".format(save_time))
+            states_history.to_csv("Attention_states.csv")
             print("****************")
             print("Step",ep,":",step)
             print("Reward: ", reward)
@@ -82,8 +82,8 @@ def train():
         rewards_history = rewards_history.append(rewards)
         controller1.update_policy(rewards, logits)
         t2 = time()
-        rewards_history.to_csv("Steps=1_rewards_{}.csv".format(save_time))
-        exploration_history.to_csv("Exploration_{}.csv".format(save_time))
+        rewards_history.to_csv("Attention_rewards.csv")
+        exploration_history.to_csv("Attention_Exploration.csv")
         print("Elapsed time: ", t2-t1)
 
 def load_data_CIFAR(batch_size = 4):
