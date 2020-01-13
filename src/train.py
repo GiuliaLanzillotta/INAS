@@ -54,7 +54,7 @@ def load_model(model, path):
 def train():
     #with tf.name_scope("train"):
     num_episodes = 15
-    num_steps = 15
+    num_steps = 10
     max_layers = 15
     train = True
 
@@ -116,13 +116,13 @@ def train():
     print("Saving the controller...")
     save_model(controller1, CONTROLLER_PATH)
 
-    # "The Best Architecture sampled"
-    # print("Training NAS finished")
-    # best_cnn = cnn(max_layers, image_size, prev_channels, num_classes,epochs=100)
-    # useless_state = best_cnn.build_child_arch(best_action)
-    # reward = best_cnn.get_reward(data_loader)
-    # print("The Final CIFAR-10 Accuracy is {}".format(reward*100))
-    # print("The Final Architecture is {}".format(best_state))
+    "The Best Architecture sampled"
+    print("Training NAS finished")
+    best_cnn = cnn(max_layers, image_size, prev_channels, num_classes, epochs=100)
+    useless_state = best_cnn.build_child_arch(best_action)
+    reward = best_cnn.get_reward(data_loader)
+    print("The Final CIFAR-10 Accuracy is {}".format(reward*100))
+    print("The Final Architecture is {}".format(best_state))
 
 
 

@@ -66,7 +66,7 @@ class controller(nn.Module):
 
     def get_action(self, state, ep, train):  # state = sequence of length 5 times number of layers
         # if (np.random.random() < self.exponential_decayed_epsilon(ep)) and (ep > 0):
-        if train == False:
+        if train == True:
             logits = self.forward(state)
             exp=False
             if np.random.random() < self.exponential_decayed_epsilon(ep):
@@ -78,7 +78,7 @@ class controller(nn.Module):
                 logits = [logit[0][torch.argmax(logit)] for logit in logits]
             return actions, logits, exp
 
-        elif train == True:
+        elif train == False:
             logits = self.forward(state)
             actions = [torch.argmax(logit) for logit in logits]
             logits = [logit[0][torch.argmax(logit)] for logit in logits]
