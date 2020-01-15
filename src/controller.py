@@ -104,14 +104,14 @@ class controller(nn.Module):
         super(controller,self).__init__()
 
         self.num_layers = 5*max_layers
-        self.encoder = Encoder(1,10,0.2)
-        self.decoder = AttentionDecoder(3,10,0.2, self.num_layers)
+        self.encoder = Encoder(1,15,0.2)
+        self.decoder = AttentionDecoder(3,15,0.2, self.num_layers)
         self.optimizer = optim.Adam(self.parameters(), lr=5e-4)
-        self.exploration = 0.90
+        self.exploration = 0.70
 
     def exponential_decayed_epsilon(self, step):
         # Decay every decay_steps interval
-        decay_steps = 2
+        decay_steps = 1
         decay_rate = 0.9
         return self.exploration * decay_rate ** (step / decay_steps)
 
@@ -145,15 +145,19 @@ class controller(nn.Module):
 
         logits = self.forward(state)
         exp=False
-        if np.random.random() < self.exponential_decayed_epsilon(ep):
-            exp = True
-            actions = [torch.argmin(logit) for logit in logits]
-            logits = [logit[0][torch.argmin(logit)] for logit in logits]
-        else:
-            actions = [torch.argmax(logit) for logit in logits]
-            logits = [logit[0][torch.argmax(logit)] for logit in logits]
+        # if np.random.random() < self.exponential_decayed_epsilon(ep):
+        #     exp = True
+        #     actions = [torch.argmin(logit) for logit in logits]
+        #     logits = [logit[0][torch.argmin(logit)] for logit in logits]
+        # else:
+        #     actions = [torch.argmax(logit) for logit in logits]
+        #     logits = [logit[0][torch.argmax(logit)] for logit in logits]
+        # return actions, logits, exp
+
+        actions = [torch.argmax(logit) for logit in logits]
+        logits = [logit[0][torch.argmax(logit)] for logit in logits]
         return actions, logits, exp
-    
+
     # REINFORCE
     def update_policy(self, rewards, logits):
         discounted_rewards = []
@@ -163,12 +167,13 @@ class controller(nn.Module):
             pw = 0
             for r in rewards[t:]:
                 r = r**(np.sign(r)*3)
+                #r = np.tan(r * np.pi / 2)
                 Gt = Gt + GAMMA**pw * r
                 pw = pw + 1
             discounted_rewards.append(Gt)
             
         discounted_rewards = torch.tensor(discounted_rewards)
-        #discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-4) # normalize discounted rewards
+        discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-4) # normalize discounted rewards
 
         policy_gradient = []
         # logits = torch.tensor(logits)
@@ -182,7 +187,7 @@ class controller(nn.Module):
             # policy_gradient.append(-1*torch.tensor(logit) * torch.tensor(Gt))
         
         self.optimizer.zero_grad()
-        policy_gradient = torch.stack(policy_gradient).sum() * (1 / len(logits))
+        policy_gradient = torch.stack(policy_gradient).sum() #* (1 / len(logits))
         policy_gradient.backward()
         self.optimizer.step()
         

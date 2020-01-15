@@ -51,14 +51,14 @@ def load_model(model, path):
 def train():
 
     num_episodes = 10
-    num_steps = 10
+    num_steps = 5
     max_layers = 15
 
     data_loader = load_data_CIFAR()
     controller1 = controller(max_layers)
     t1 = time()
 
-    starting_episode = 0
+    starting_episode = 1
 
     if (LOAD_MODEL):
         print("Ripristinating the controller...")
@@ -85,27 +85,27 @@ def train():
                 print("New state: ", new_state)
 
                 reward = cnn1.get_reward(data_loader)
-                reward_diff = reward - max_reward
-                if(reward>max_reward):
-                    max_reward = reward
+                # reward_diff = reward - max_reward
+                # if(reward>max_reward):
+                #     max_reward = reward
                 state = new_state
                 logits.append(logit)
-                rewards_diffs.append(reward_diff)
+                #rewards_diffs.append(reward_diff)
                 rewards.append(reward)
                 exps.append(exploration)
                 states_history = states_history.append([new_state])
-                states_history.to_csv("EncDecDiff_states.csv")
+                states_history.to_csv("5AttDiff2_states.csv")
                 print("****************")
                 print("Step",ep,":",step)
                 print("Reward: ", reward)
                 print("****************")
 
             exploration_history = exploration_history.append(exps)
-            rewards_history = rewards_history.append(rewards_diffs)
-            controller1.update_policy(rewards_diffs, logits)
+            rewards_history = rewards_history.append(reward)
+            controller1.update_policy(reward, logits)
             t2 = time()
-            rewards_history.to_csv("EncDecDiff_rewards.csv")
-            exploration_history.to_csv("EncDecDiff_Exploration.csv")
+            rewards_history.to_csv("5AttDiff2_rewards.csv")
+            exploration_history.to_csv("5AttDiff2_Exploration.csv")
             print("Elapsed time: ", t2-t1)
     except Exception as e:
         print(e)
@@ -117,12 +117,12 @@ def load_data_CIFAR(batch_size = 4):
     transform = transforms.Compose(
         [transforms.ToTensor(),
          transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))])
-    trainset = torchvision.datasets.CIFAR10(root='../data', train=True,
+    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                             download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=64,
                                               shuffle=True, num_workers=0)
     
-    testset = torchvision.datasets.CIFAR10(root='../data', train=False,
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                            download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=64,
                                              shuffle=False, num_workers=0)

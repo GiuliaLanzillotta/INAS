@@ -88,7 +88,7 @@ class cnn():
             #convolution
             self.image_size = self.update_size(self.image_size, state[0], state[1], padding)
             #pooling
-            if state[3]==2:
+            if state[3]!=2:
                 self.image_size = self.update_size(self.image_size, state[4], 1, 0)
 
         self.net = conv_net(state, input_size=self.original_image_size, prev_channels = self.prev_channels, n_class=self.num_classes,device = self.device)
@@ -115,7 +115,7 @@ class cnn():
         padding = self.get_padding(self.image_size, state[0], state[1])
         image_size = self.update_size(self.image_size, state[0], state[1], padding)
         if (state[4]<1 or state[4] >= image_size):
-            state[4] = self.state[4+layer*5]
+            state[3] = 2
             count = count+1
         
         return state, count
