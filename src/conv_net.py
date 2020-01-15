@@ -1,10 +1,14 @@
+"""This module implements the CNN, it defines the
+ architecture, defined by the state from the CNN module."""
+
+
 from torch import nn
 import numpy as np
 import torch
 
 class conv_net(nn.Module):
 
-    def __init__(self, conv_layers, input_size=28, prev_channels=1, n_class=10, device = 'cuda'):
+    def __init__(self, conv_layers, input_size=32, prev_channels=3, n_class=10, device = 'cuda'):
         super(conv_net, self).__init__()
 
         self.input_size = input_size
@@ -24,41 +28,48 @@ class conv_net(nn.Module):
             ]
             img_dim = self.update_size(img_dim, int(kernel_size), int(stride), p)
 
-            # pooling =0 is max_poos, 1 is avg_pool and 2 is no_pool
+            "pooling =0 is max_pool, 1 is avg_pool and 2 is no_pool"
             if pooling==0:
                 layers += [
                     nn.MaxPool2d(kernel_size=pooling_size, stride=1, padding=0),
                     nn.Dropout(0.2)
                 ]
                 img_dim = self.update_size(img_dim, pooling_size, 1, 0)
-            # if pooling==1:
-            #     layers += [
-            #             nn.AvgPool2d(kernel_size = pooling_size, stride=1,padding=0)
-            #     ]
-            #     img_dim = self.update_size(img_dim, pooling_size, 1, 0)
+            if pooling==1:
+                layers += [
+                        nn.AvgPool2d(kernel_size = pooling_size, stride=1,padding=0),
+                        nn.Dropout(0.2)
+                ]
+                img_dim = self.update_size(img_dim, pooling_size, 1, 0)
 
             prev_channels = n_channels
-        #layers += [nn.Flatten(1,-1)]
 
         self.prev_fc_size = int(int(prev_channels) * img_dim * img_dim)
 
-        layers += [nn.Dropout(0.2), #CHANGED -4 to -3 IN FORWARD
-                   nn.Linear(self.prev_fc_size, 128),
+
+        "The Classification head, that transforms features into classficiation outputs" \
+        "Apply some drop out, 2 linear layers with ELU activation"
+        layers += [nn.Dropout(0.2),
+                   nn.Linear(self.prev_fc_size, 256),
                    nn.ELU(),
-                   nn.Linear(128, n_class)
+                   nn.Linear(256, n_class)
                    ]
         self.layers = layers
         self.layers = nn.ModuleList(layers)
-        #self.layers = nn.Sequential(*layers)
-        
+
+    "Update Image Size"
     def update_size(self, image_size, kernel_size, stride, padding):
         return int((image_size - kernel_size + 2*padding)/stride + 1)
 
+    "Define the forward pass for the CNN"
     def forward(self, x):
         x = x.to(self.device)
+        "For each layer, pass x through the layer!"
         for i,layer in enumerate(self.layers):
+            "Flatten before the Linear Layers!"
             if(i==len(self.layers)-4):
                 x = x.flatten(1,-1)
             x = layer(x)
+
         return x
 

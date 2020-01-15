@@ -6,10 +6,8 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import math
 import numpy as np
 import random
-from torch.autograd import Variable
 
 #constants##
 GAMMA = 1
@@ -22,11 +20,11 @@ class controller(nn.Module):
         
         cells = []
         for layer in range(max_layers):
-            cell1 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell2 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell3 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell4 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
-            cell5 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
+            cell1 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=3)
+            cell2 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=3)
+            cell3 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=3)
+            cell4 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=3)
+            cell5 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=3)
             cells.append(cell1)
             cells.append(cell2)
             cells.append(cell3)
@@ -35,7 +33,7 @@ class controller(nn.Module):
         self.cells = nn.ModuleList(cells) # better name: layers
         self.num_layers = 5*max_layers
         self.optimizer = optim.Adam(self.parameters(), lr=5e-4)
-        self.exploration = 0.90
+        self.exploration = 0.30
 
     def exponential_decayed_epsilon(self, step):
         # Decay every decay_steps interval
@@ -55,7 +53,7 @@ class controller(nn.Module):
                     element.requires_grad_(True)
             else:
                 output, hidden_states = cell(
-                    torch.tensor(state[i], dtype=torch.float).view(1, 1, 1).clone().detach().requires_grad_(True),
+                    torch.tensor(state[i], dtype=torch.float).view(1, 1, 1).requires_grad_(True),
                     hidden_states)
                 for element in hidden_states:
                     element.requires_grad_(True)
@@ -70,6 +68,7 @@ class controller(nn.Module):
             logits = self.forward(state)
             exp=False
             if np.random.random() < self.exponential_decayed_epsilon(ep):
+                print("Exploration ON")
                 exp = True
                 actions = [torch.argmin(logit) for logit in logits]
                 logits = [logit[0][torch.argmin(logit)] for logit in logits]
@@ -99,19 +98,10 @@ class controller(nn.Module):
             discounted_rewards.append(Gt)
             
         discounted_rewards = torch.tensor(discounted_rewards)
-        #discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-4) # normalize discounted rewards
-
         policy_gradient = []
-        # logits = torch.tensor(logits)
-        # logits = logits.flatten(1,-1)
-        # logits is a list of lists where the outer contains all steps taken, the inner for a given step length  has 10 elements where each element is a tensor of length 3
         for logit, Gt in zip(logits, discounted_rewards):
             for element in logit:
                 policy_gradient.append(-1.0 * torch.log(element) * Gt)
-                # for index in range(3):
-                #     policy_gradient.append(-1.0 * torch.log(element[0, index].type(torch.float)) * Gt)
-            # policy_gradient.append(-1*torch.tensor(logit) * torch.tensor(Gt))
-        
         self.optimizer.zero_grad()
         policy_gradient = torch.stack(policy_gradient).sum() * (1 / len(logits))
         policy_gradient.backward()
