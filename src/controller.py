@@ -6,13 +6,6 @@
     Change the controller? Attention model or bidirectional RNN.
 """
 
-# TODO: Take out -1 in policy_update, fix gradient descent with exploration, fix getting same architectures, parameters remain same over training
-# TODO: Fixed gradient descent with exploration by using with torch.no_grad():
-# TODO: Fix init of state for a new episode because same param and same input wont change much
-# Get the warning with no exploration  UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), r
-# ather than torch.tensor(sourceTensor).
-#output, hidden_states = cell(torch.tensor(state[i], dtype=torch.float).view(1, 1, 1), hidden_states)
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -21,7 +14,7 @@ import random
 from torch.autograd import Variable
 
 #constants##
-GAMMA = 0.9
+GAMMA = 1
 
 class controller(nn.Module):
 
@@ -78,57 +71,57 @@ class controller(nn.Module):
         decay_rate = 0.9
         return self.exploration * decay_rate ** (step / decay_steps)
 
-    def get_action(self, state, ep): # state = sequence of length 5 times number of layers
+    def get_action(self, state, ep):  # state = sequence of length 5 times number of layers
         # if (np.random.random() < self.exponential_decayed_epsilon(ep)) and (ep > 0):
 
         logits = self.forward(state)
+        exp = False
+        # if np.random.random() < self.exponential_decayed_epsilon(ep):
+        #     exp = True
+        #     actions = [torch.argmin(logit) for logit in logits]
+        #     logits = [logit[0][torch.argmin(logit)] for logit in logits]
+        # else:
+        #     actions = [torch.argmax(logit) for logit in logits]
+        #     logits = [logit[0][torch.argmax(logit)] for logit in logits]
+        # return actions, logits, exp
 
-        if np.random.random() < self.exponential_decayed_epsilon(ep):
-            rand = random.randrange(0, 3, 1)
-            actions = [random.randrange(0, 3, 1) for logit in logits]
-            new_logits = []
-            for logit, action in zip(logits,actions):
-                new_logits.append(logit[0][action])
-            logits = new_logits
-        else:
-            actions = [torch.argmax(logit) for logit in logits]
-            logits = [logit[0][torch.argmax(logit)] for logit in logits]
-        return actions, logits
+        actions = [torch.argmax(logit) for logit in logits]
+        logits = [logit[0][torch.argmax(logit)] for logit in logits]
+        return actions, logits, exp
 
     # REINFORCE
     def update_policy(self, rewards, logits):
         discounted_rewards = []
 
         for t in range(len(rewards)):
-            Gt = 0 
+            Gt = 0
             pw = 0
             for r in rewards[t:]:
-                Gt = Gt + GAMMA**pw * r
+                r = r ** (np.sign(r) * 3)
+                # r = np.tan(r * np.pi / 2)
+                Gt = Gt + GAMMA ** pw * r
                 pw = pw + 1
             discounted_rewards.append(Gt)
-            
+
         discounted_rewards = torch.tensor(discounted_rewards)
-        discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-4) # normalize discounted rewards
-    
+        discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (
+                    discounted_rewards.std() + 1e-4)  # normalize discounted rewards
+
         policy_gradient = []
         # logits = torch.tensor(logits)
         # logits = logits.flatten(1,-1)
         # logits is a list of lists where the outer contains all steps taken, the inner for a given step length  has 10 elements where each element is a tensor of length 3
         for logit, Gt in zip(logits, discounted_rewards):
             for element in logit:
-                element = torch.max(element)
                 policy_gradient.append(-1.0 * torch.log(element) * Gt)
                 # for index in range(3):
                 #     policy_gradient.append(-1.0 * torch.log(element[0, index].type(torch.float)) * Gt)
             # policy_gradient.append(-1*torch.tensor(logit) * torch.tensor(Gt))
-        
+
         self.optimizer.zero_grad()
-        policy_gradient = torch.stack(policy_gradient).sum() * (1 / len(logits))
+        policy_gradient = torch.stack(policy_gradient).sum()  # * (1 / len(logits))
         policy_gradient.backward()
         self.optimizer.step()
-        
-
-
 
 
 

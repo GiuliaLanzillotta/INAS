@@ -4,3 +4,4 @@ venv
 /data
 /src/__pycache__
 lsf.*
+states.csv
