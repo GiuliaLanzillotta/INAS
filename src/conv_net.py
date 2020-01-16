@@ -32,13 +32,13 @@ class conv_net(nn.Module):
             if pooling==0:
                 layers += [
                     nn.MaxPool2d(kernel_size=pooling_size, stride=1, padding=0),
-                    nn.Dropout(0.2)
+                    nn.Dropout(0.1)
                 ]
                 img_dim = self.update_size(img_dim, pooling_size, 1, 0)
             if pooling==1:
                 layers += [
                         nn.AvgPool2d(kernel_size = pooling_size, stride=1,padding=0),
-                        nn.Dropout(0.2)
+                        nn.Dropout(0.1)
                 ]
                 img_dim = self.update_size(img_dim, pooling_size, 1, 0)
 

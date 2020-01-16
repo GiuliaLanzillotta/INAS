@@ -23,8 +23,9 @@ else:
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-LOAD_MODEL = False
-CONTROLLER_PATH = "./controller.pt"
+LOAD_MODEL = True
+SAVE_CONTROLLER_PATH = "./controller1.pt"
+LOAD_CONTROLLER_PATH = "./controller.pt"
 
 "save_model saves the weights and the optimizer to enable more training"
 def save_model(model,path):
@@ -57,6 +58,9 @@ def train():
     controller1 = controller(max_layers)
     t1 = time()
     save_time = datetime.datetime.now()
+    if (LOAD_MODEL):
+        print("Loading the Controller")
+        controller1 = load_model(controller1, path=LOAD_CONTROLLER_PATH)
 
     "Save Files,"
     rewards_history = pd.DataFrame()
@@ -121,7 +125,7 @@ def train():
         print("Elapsed time: ", t2-t1)
 
     print("Saving the controller...")
-    save_model(controller1, CONTROLLER_PATH)
+    save_model(controller1, SAVE_CONTROLLER_PATH)
     print("Training NAS finished")
 
     "The Best Architecture sampled training"

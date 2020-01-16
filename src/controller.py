@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-import random
+
 
 #constants##
 GAMMA = 1
@@ -15,16 +15,15 @@ GAMMA = 1
 class controller(nn.Module):
 
     def __init__(self, max_layers): # x is a state
-        #TODO: create controller architecture
         super(controller,self).__init__()
         
         cells = []
         for layer in range(max_layers):
-            cell1 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=3)
-            cell2 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=3)
-            cell3 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=3)
-            cell4 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=3)
-            cell5 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=3)
+            cell1 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
+            cell2 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
+            cell3 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
+            cell4 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
+            cell5 = nn.LSTM(input_size = 1, hidden_size=3, num_layers=1)
             cells.append(cell1)
             cells.append(cell2)
             cells.append(cell3)

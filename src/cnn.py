@@ -55,7 +55,7 @@ class cnn():
     def get_padding(image_size, kernel_size, stride):
         return np.ceil(((kernel_size - 1) * image_size - stride + kernel_size) / 2)
 
-    """Update_size fixes the image size in order to carry out the relevent check for each layer!"""
+    """Update_size fixes the image size in order to carry out the relevant check for each layer!"""
     @staticmethod
     def update_size(image_size, kernel_size, stride, padding):
         return int((image_size - kernel_size + 2 * padding) / stride + 1)
@@ -81,7 +81,7 @@ class cnn():
             state.extend(layer_state)
             padding = self.get_padding(self.image_size, state[0], state[1])
             self.image_size = self.update_size(self.image_size, state[0], state[1], padding)
-            if state[3] == 2:
+            if state[3] != 2:   #If we have pooling then update image size for checks.
                 self.image_size = self.update_size(self.image_size, state[4], 1, 0)
 
         self.net = conv_net(state, input_size=self.original_image_size, prev_channels = self.prev_channels, n_class=self.num_classes,device = self.device)
