@@ -22,15 +22,15 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 LOAD_MODEL = False
-CONTROLLER_PATH = "./controller.pt"
-
+CONTROLLER_NAME = "RecurrentController"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def print_state(state, layers):
     for i in range(layers):
         print([s.item() for s in state[i*5:(i+1)*5]])
 
-def save_model(model,path,ep):
+def save_model(model,ep):
+    path = './'+CONTROLLER_NAME+'.pt'
     optimizer = model.optimizer
     torch.save({
         'model_state_dict': model.state_dict(),
@@ -38,7 +38,8 @@ def save_model(model,path,ep):
         'episode':ep
     }, path)
 
-def load_model(model, path):
+def load_model(model):
+    path = './'+CONTROLLER_NAME+'.pt'
     optimizer = model.optimizer
     checkpoint = torch.load(path)
     model.load_state_dict(checkpoint['model_state_dict'])
@@ -60,7 +61,7 @@ def train():
 
     if (LOAD_MODEL):
         print("Ripristinating the controller...")
-        controller1, starting_episode = load_model(controller1, CONTROLLER_PATH)
+        controller1, starting_episode = load_model(controller1)
 
     rewards_history = pd.DataFrame()
     states_history = pd.DataFrame()
@@ -121,6 +122,8 @@ def train():
     except Exception as e:
         print(e)
 
+    print("Saving the controller...")
+    save_model(controller1, ep + starting_episode)
 
 def load_data_CIFAR(batch_size=4):
     transform = transforms.Compose(
