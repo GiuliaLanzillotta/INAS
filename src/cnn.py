@@ -103,10 +103,10 @@ class cnn():
         # 0:size of filter, 1:stride, 2:channels, 3:maxpool(boolean), 4:max_pool_size
         # We must be careful about everything except 3: maxpool(boolean)
         if (state[0]<1 or state[0]>self.image_size):
-            state[0] = self.state[0+layer*5]
+            state[0] = 1
             count = count+1
         if (state[1]<1 or state[1]>self.image_size + padding - state[0]): # add later
-            state[1] = self.state[1+layer*5]
+            state[1] = 1
             count = count+1
         if (state[2]<1 or state[2] > 128): # later, penalty for the running time
             state[2] = self.state[2+layer*5]
