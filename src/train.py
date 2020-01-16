@@ -106,8 +106,8 @@ def train():
                 print("****************")
 
             exploration_history = exploration_history.append(exps)
-            rewards_history = rewards_history.append(reward)
-            controller1.update_policy(reward, logits)
+            rewards_history = rewards_history.append(rewards)
+            controller1.update_policy(rewards, logits)
             if ep % 3 == 1:
                 if (increase):
                     controller1.add_layer()
