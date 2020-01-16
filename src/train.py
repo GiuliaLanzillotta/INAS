@@ -24,7 +24,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 LOAD_MODEL = False
-CONTROLLER_PATH = "./controller.pt"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -32,8 +31,9 @@ def print_state(state, layers):
     for i in range(layers):
         print([s.item() for s in state[i*5:(i+1)*5]])
 
-def save_model(model,path,ep):
+def save_model(model,ep, name="controller"):
     optimizer = model.optimizer
+    path = './'+name+'.pt'
     torch.save({
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
@@ -101,17 +101,16 @@ def train():
                 print("****************")
 
             exploration_history = exploration_history.append(exps)
-            rewards_history = rewards_history.append(reward)
-            controller1.update_policy(reward, logits)
+            rewards_history = rewards_history.append(rewards)
+            controller1.update_policy(rewards, logits)
             t2 = time()
             rewards_history.to_csv("5AttDiff2_rewards.csv")
             exploration_history.to_csv("5AttDiff2_Exploration.csv")
             print("Elapsed time: ", t2-t1)
     except Exception as e:
         print(e)
-
     print("Saving the controller...")
-    save_model(controller1, CONTROLLER_PATH, ep + starting_episode)
+    save_model(controller1, ep + starting_episode, "AttentionController")
 
 def load_data_CIFAR(batch_size = 4):
     transform = transforms.Compose(
