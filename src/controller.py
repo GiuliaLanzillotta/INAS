@@ -11,9 +11,12 @@ import numpy as np
 import random
 from torch.autograd import Variable
 
-#constants##
+# This constant controls the discount on the rewards
+# over time
 GAMMA = 1
 class Encoder(nn.Module):
+    """Plain and simple Encoder network to put before the
+    Encoder or the Attention module."""
     def __init__(self, input_dim, hid_dim, dropout):
         super().__init__()
         self.hid_dim = hid_dim
@@ -29,6 +32,8 @@ class Encoder(nn.Module):
         return hidden
 
 class Decoder(nn.Module):
+    """Plain and simple Decoder network to stack on top of the Encoder,
+    alternatively to the Attention head."""
     def __init__(self, output_dim, hid_dim, dropout):
         super().__init__()
         self.hid_dim = hid_dim
@@ -38,6 +43,7 @@ class Decoder(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, input, hidden, context):
+        # Recap on sizes
         # input = [batch size]
         # hidden = [n layers * n directions, batch size, hid dim]
         # context = [n layers * n directions, batch size, hid dim]
@@ -61,7 +67,7 @@ class Decoder(nn.Module):
         return prediction, hidden
 
 class AttentionDecoder(nn.Module):
-    """Bahdanau et. al attention model.
+    """Attention model inspired to Bahdanau et. al attention model.
     """
     def __init__(self, output_dim, hid_dim, dropout, max_length):
         super().__init__()
@@ -90,8 +96,8 @@ class AttentionDecoder(nn.Module):
         scores = scores.squeeze(2).unsqueeze(1)
         alphas = torch.softmax(scores, dim=-1)
         context = torch.bmm(alphas, value)
-        # now that the weigths are calculated we can pass through
-        # the decoder
+        # now that the input weigths are calculated we can pass through
+        # the decoder and obtain the logits we need
         rnn_input = torch.cat([torch.tensor(input, dtype=torch.float).view(1,1,1), context], dim=2)
         rnn_output, hidden = self.rnn(rnn_input, hidden.view(1,1,-1))
         pre_output = self.dropout(rnn_output)
@@ -105,15 +111,11 @@ class controller(nn.Module):
 
         self.num_layers = 5*max_layers
         self.encoder = Encoder(1,15,0.2)
+        # Un-comment the following line to use a standard
+        # decoder as head
+        # self.decoder = Decoder(3,15,0.2)
         self.decoder = AttentionDecoder(3,15,0.2, self.num_layers)
         self.optimizer = optim.Adam(self.parameters(), lr=5e-4)
-        self.exploration = 0.70
-
-    def exponential_decayed_epsilon(self, step):
-        # Decay every decay_steps interval
-        decay_steps = 1
-        decay_rate = 0.9
-        return self.exploration * decay_rate ** (step / decay_steps)
 
     def forward(self, state):
         # tensor to store decoder outputs
@@ -124,68 +126,52 @@ class controller(nn.Module):
         hidden = context[-1]
 
         for t in range(1, self.num_layers):
-            #input = state[t]
             input = state[t]
             # receive output tensor (predictions) and new hidden state
             output, hidden = self.decoder(input, hidden, context)
             # place predictions in a tensor holding predictions for each token
             logits[t] = output
-
-            # # get the highest predicted token from our predictions
-            # top1 = output.argmax(1)
-            #
-            # # if teacher forcing, use actual next token as next input
-            # # if not, use predicted token
-            # input = trg[t] if teacher_force else top1
-
         return logits
 
-    def get_action(self, state, ep):  # state = sequence of length 5 times number of layers
-        # if (np.random.random() < self.exponential_decayed_epsilon(ep)) and (ep > 0):
-
+    def get_action(self, state):  # state = sequence of length 5 times number of layers
         logits = self.forward(state)
-        exp=False
-        # if np.random.random() < self.exponential_decayed_epsilon(ep):
-        #     exp = True
-        #     actions = [torch.argmin(logit) for logit in logits]
-        #     logits = [logit[0][torch.argmin(logit)] for logit in logits]
-        # else:
-        #     actions = [torch.argmax(logit) for logit in logits]
-        #     logits = [logit[0][torch.argmax(logit)] for logit in logits]
-        # return actions, logits, exp
-
         actions = [torch.argmax(logit) for logit in logits]
         logits = [logit[0][torch.argmax(logit)] for logit in logits]
-        return actions, logits, exp
+        return actions, logits
 
-    # REINFORCE
+
     def update_policy(self, rewards, logits):
-        discounted_rewards = []
+        """This function implements the policy gradient update
+        described in the REINFORCE algorithm"""
 
+        # We first calculate the sum of the discounted rewards
+        discounted_rewards = []
         for t in range(len(rewards)):
             Gt = 0 
             pw = 0
             for r in rewards[t:]:
                 r = r**(np.sign(r)*3)
+                # Un-comment the following line to use a tangent
+                # reward function
                 #r = np.tan(r * np.pi / 2)
                 Gt = Gt + GAMMA**pw * r
                 pw = pw + 1
             discounted_rewards.append(Gt)
             
         discounted_rewards = torch.tensor(discounted_rewards)
-        discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-4) # normalize discounted rewards
+        # We normalise the sum of discounted rewards
+        discounted_rewards = (discounted_rewards - discounted_rewards.mean()) \
+                             / (discounted_rewards.std() + 1e-4)
 
+        # Calculate the policy gradient
         policy_gradient = []
-        # logits = torch.tensor(logits)
-        # logits = logits.flatten(1,-1)
-        # logits is a list of lists where the outer contains all steps taken, the inner for a given step length  has 10 elements where each element is a tensor of length 3
+        # logits is a list of lists where the outer contains
+        # all steps taken, the inner for a given step length
+        # has 10 elements where each element is a tensor of length 3
         for logit, Gt in zip(logits, discounted_rewards):
             for element in logit:
                 policy_gradient.append(-1.0 * torch.log(element) * Gt)
-                # for index in range(3):
-                #     policy_gradient.append(-1.0 * torch.log(element[0, index].type(torch.float)) * Gt)
-            # policy_gradient.append(-1*torch.tensor(logit) * torch.tensor(Gt))
-        
+
         self.optimizer.zero_grad()
         policy_gradient = torch.stack(policy_gradient).sum() #* (1 / len(logits))
         policy_gradient.backward()
