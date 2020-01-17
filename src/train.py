@@ -21,7 +21,7 @@ else:
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-LOAD_MODEL = False
+LOAD_MODEL = True
 CONTROLLER_NAME = "RecurrentController"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

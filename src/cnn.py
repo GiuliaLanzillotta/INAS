@@ -21,7 +21,7 @@ class cnn():
                          3, 1, 64, 2, 2,
                          3, 1, 128, 0, 2]
         additional_state = [3, 1, 128, 0, 2]
-        for l in range(layers-len(initial_state)):
+        for l in range(layers-(len(initial_state)//5)):
             initial_state.extend(additional_state)
         self.state = initial_state
         self.image_size = image_size
@@ -84,25 +84,45 @@ class cnn():
         return self.state
 
     def check_state(self, state, layer):
+        """This function plays a central role in the training because
+        it sets the bound of admissibility of solution. We tried to keep the bounds
+        as loose as possible, for our computing capabilities. In case any
+        of the parameters exceeds the boundaries, we set them to be equal
+        to a fixed value (1 for filter size, 1 for stride, and No pooling
+        for the pooling)"""
         count = 0
         padding = self.get_padding(self.image_size, state[0], state[1])
-        # 0:size of filter, 1:stride, 2:channels, 3:maxpool(boolean), 4:max_pool_size
-        # We must be careful about everything except 3: maxpool(boolean)
-        if (state[0]<1 or state[0]>self.image_size):
-            state[0] = 1
-            count = count+1
-        if (state[1]<1 or state[1]>self.image_size + padding - state[0]): # add later
-            state[1] = 1
-            count = count+1
-        if (state[2]<1 or state[2] > 128): # later, penalty for the running time
-            state[2] = self.state[2+layer*5]
-            count = count+1
-        # reducing image size for convolution
+        # State[0] is the filter size.
+        if (state[0] < 1 or state[0] > self.image_size):
+            old = self.state[layer * 5]
+            if (old > self.image_size):
+                state[0] = 1
+            else:
+                state[0] = old
+            count = count + 1
+        # State[1] is the stride.
+        if (state[1] < 1 or state[1] > self.image_size + padding - state[0]):
+            old = self.state[1 + layer * 5]
+            if (old > self.image_size):
+                state[1] = 1
+            else:
+                state[1] = old
+            count = count + 1
+        # State[2] is the number of channels.
+        if (state[2] < 1 or state[2] > 128):
+            state[2] = self.state[2 + layer * 5]
+            count = count + 1
+        # reducing image size after convolution
         padding = self.get_padding(self.image_size, state[0], state[1])
         image_size = self.update_size(self.image_size, state[0], state[1], padding)
-        if (state[4]<1 or state[4] >= image_size):
-            state[3] = 2
-            count = count+1
+        # State[4] is the pooling size.
+        if (state[4] < 1 or state[4] >= image_size):
+            old = self.state[4 + layer * 5]
+            if (old > image_size):
+                state[3] = 2
+            else:
+                state[4] = old
+            count = count + 1
 
         return state, count
 
