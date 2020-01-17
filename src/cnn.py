@@ -9,29 +9,26 @@ import torch.optim as optim
 from src.conv_net import conv_net
 import numpy as np
 
-max_layers = 10
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class cnn():
 
-    def __init__(self, max_layers, image_size, prev_channels, num_classes, epochs=25):
-        #TODO
-        # size of filter, stride, channels, maxpool(boolean), max_pool_size
-        # Droput? Use same padding for now.
-        # (We may have to change the image_size if we use same)
-        # initial_state = list([[3,1,32,2,2]*max_layers][0])#*max_layers #0 means yes to max_pool
+    def __init__(self, layers, image_size, prev_channels, num_classes, epochs=25):
         initial_state = [3, 1, 32, 2, 2,
                          3, 1, 32, 0, 2,
                          3, 1, 64, 2, 2,
                          3, 1, 64, 2, 2,
                          3, 1, 128, 0, 2]
+        additional_state = [3, 1, 128, 0, 2]
+        for l in range(layers-len(initial_state)):
+            initial_state.extend(additional_state)
         self.state = initial_state
         self.image_size = image_size
         self.original_image_size = image_size
         self.prev_channels = prev_channels
         self.num_classes = num_classes
-        self.max_layers= max_layers
+        self.max_layers= layers
         self.op_add = [lambda x: x+1 , lambda x: x, lambda x: x-1]
         self.op_mul = [lambda x: x*2, lambda x: x, lambda x: x/2]
         self.epochs = epochs
@@ -56,7 +53,6 @@ class cnn():
 
 
     def build_child_arch(self, action):
-        #TODO
         #max_pool, cnn or avg_pool
         state = []
         self.image_size=self.original_image_size

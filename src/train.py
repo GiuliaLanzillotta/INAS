@@ -121,6 +121,7 @@ def train():
 
     except Exception as e:
         print(e)
+        print(e.with_traceback())
 
     print("Saving the controller...")
     save_model(controller1, ep + starting_episode)
