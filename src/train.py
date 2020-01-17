@@ -20,11 +20,11 @@ def load_data_CIFAR(batch_size=64):
     transform = transforms.Compose(
         [transforms.ToTensor(),
          transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))])
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
+    trainset = torchvision.datasets.CIFAR10(root='../data', train=True,
                                             download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=0)
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
+    testset = torchvision.datasets.CIFAR10(root='../data', train=False,
                                            download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=False, num_workers=0)
@@ -93,10 +93,10 @@ def train():
     data_loader = load_data_CIFAR()
     # The controller is created only once, at the
     # beginning of the training
-    controller = controller(max_layers)
+    _controller = controller(max_layers)
     if (LOAD_MODEL):
         print("Ripristinating the controller...")
-        controller, starting_episode = load_model(controller)
+        _controller, starting_episode = load_model(_controller)
     rewards_history = pd.DataFrame()
     states_history = pd.DataFrame()
     t1 = time()
@@ -124,7 +124,7 @@ def train():
                 # 1. Get the action from a current state: this correspond to
                 # a forward pass through the controller, which returns the action
                 # take and the corresponding logit
-                action, logit, = controller.get_action(state)
+                action, logit, = _controller.get_action(state)
                 # 2. Update the state with the new action and translate
                 # the new state into an actual CNN archtiecture. Note: the
                 # architecture is never exchanged between modules. Only the
@@ -153,14 +153,15 @@ def train():
             # At the end of each episode the policy gradient is
             # back-propagated through the controller to update
             # its parameters
-            controller.update_policy(rewards, logits)
+            _controller.update_policy(rewards, logits)
             t2 = time()
             print("Elapsed time: ", t2-t1)
 
     except Exception as e:
         print(e)
+        print(e.with_traceback())
     print("Saving the controller...")
-    save_model(controller, ep + starting_episode)
+    save_model(_controller, ep + starting_episode)
 
 
 if __name__ == '__main__':
