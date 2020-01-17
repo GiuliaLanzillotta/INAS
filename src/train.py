@@ -20,11 +20,11 @@ def load_data_CIFAR(batch_size=64):
     transform = transforms.Compose(
         [transforms.ToTensor(),
          transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))])
-    trainset = torchvision.datasets.CIFAR10(root='../data', train=True,
+    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                             download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=0)
-    testset = torchvision.datasets.CIFAR10(root='../data', train=False,
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                            download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=False, num_workers=0)
@@ -112,8 +112,8 @@ def train():
             # variable of CNN
             # During the episode this class will keep track of the
             # state and will build the child architectures
-            cnn = cnn(max_layers, image_size, prev_channels, num_classes)
-            state = cnn.state
+            _cnn = cnn(max_layers, image_size, prev_channels, num_classes)
+            state = _cnn.state
             # Initialise structures to collect rewards and logits
             rewards = []
             logits = []
@@ -129,12 +129,12 @@ def train():
                 # the new state into an actual CNN archtiecture. Note: the
                 # architecture is never exchanged between modules. Only the
                 # state is communicated.
-                new_state = cnn.build_child_arch(action)
+                new_state = _cnn.build_child_arch(action)
                 state = new_state
                 print("New state: ", new_state)
                 # 3. Train the new child architecture just built and
                 # get a reward corresponding to the test accuracy
-                reward = cnn.get_reward(data_loader)
+                reward = _cnn.get_reward(data_loader)
                 logits.append(logit)
                 rewards.append(reward)
                 # Uncomment this to use delta rewards
