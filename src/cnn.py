@@ -114,11 +114,19 @@ class cnn():
         padding = self.get_padding(self.image_size, state[0], state[1])
         # State[0] is the filter size.
         if (state[0]<1 or state[0]>self.image_size):
-            state[0] = 1
+            old = self.state[layer*5]
+            if(old> self.image_size):
+                state[0] = 1
+            else:
+                state[0] = old
             count = count+1
         # State[1] is the stride.
         if (state[1]<1 or state[1]>self.image_size + padding - state[0]):
-            state[1] = 1
+            old = self.state[1+ layer * 5]
+            if (old > self.image_size):
+                state[1] = 1
+            else:
+                state[1] = old
             count = count+1
         # State[2] is the number of channels.
         if (state[2]<1 or state[2] > 128):
@@ -129,7 +137,11 @@ class cnn():
         image_size = self.update_size(self.image_size, state[0], state[1], padding)
         # State[4] is the pooling size.
         if (state[4]<1 or state[4] >= image_size):
-            state[3] = 2
+            old = self.state[4+ layer * 5]
+            if (old > image_size):
+                state[3] = 2
+            else:
+                state[4] = old
             count = count+1
         
         return state, count

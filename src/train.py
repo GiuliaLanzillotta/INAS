@@ -49,7 +49,7 @@ def load_data_MNIST(batch_size=4):
 # parameters
 LOAD_MODEL = False
 CONTROLLER_NAME = "Attention"
-num_episodes = 10
+num_episodes = 15
 num_steps = 5
 max_layers = 15
 starting_episode = 0
@@ -143,13 +143,13 @@ def train():
                 #     max_reward = reward
                 # rewards_diffs.append(reward_diff)
                 states_history = states_history.append([new_state])
-                states_history.to_csv("5AttDiff2_states.csv")
+                states_history.to_csv("5Att_states.csv")
                 print("Step ",step, " of episode ",ep)
                 print("Reward: ", reward)
                 print("******************************************")
 
             rewards_history = rewards_history.append(rewards)
-            rewards_history.to_csv("5AttDiff2_rewards.csv")
+            rewards_history.to_csv("5Att_rewards.csv")
             # At the end of each episode the policy gradient is
             # back-propagated through the controller to update
             # its parameters
