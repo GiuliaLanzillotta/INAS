@@ -1,4 +1,5 @@
-""" The controller module will do what the old REINFORCE file did.
+""" The controller module defines the RNN architecture
+    and implements the REINFORCE.
     It has to implement the following methods:
     - get_action(state)
     - update_policy(episode)
@@ -32,10 +33,12 @@ class controller(nn.Module):
         self.cells = nn.ModuleList(cells) # better name: layers
         self.num_layers = 5*max_layers
         self.optimizer = optim.Adam(self.parameters(), lr=5e-4)
-        self.exploration = 0.30
+        self.exploration = 0             #Exploration set very low.
 
+
+    "Exploration Calculation"
     def exponential_decayed_epsilon(self, step):
-        # Decay every decay_steps interval
+        "Decay every decay_steps interval"
         decay_steps = 2
         decay_rate = 0.9
         return self.exploration * decay_rate ** (step / decay_steps)
@@ -45,7 +48,7 @@ class controller(nn.Module):
         softmax = nn.Softmax(1)
 
         for i, cell in enumerate(self.cells):
-            # state_i = torch.tensor(state[i], dtype=torch.float).view(1,1,1)
+
             if (i == 0):
                 output, hidden_states = cell(torch.tensor(state[i], dtype=torch.float).view(1, 1, 1))
                 for element in hidden_states:
@@ -61,8 +64,9 @@ class controller(nn.Module):
             logits.append(logit)
         return logits
 
+    "Get an action to build the new state of the CNN from the last one!"
     def get_action(self, state, ep, train):  # state = sequence of length 5 times number of layers
-        # if (np.random.random() < self.exponential_decayed_epsilon(ep)) and (ep > 0):
+
         if train == True:
             logits = self.forward(state)
             exp=False
@@ -83,7 +87,7 @@ class controller(nn.Module):
             return actions, logits
 
     
-    # REINFORCE
+    "The Reinforce Algorithm"
     def update_policy(self, rewards, logits):
         discounted_rewards = []
 
@@ -91,7 +95,7 @@ class controller(nn.Module):
             Gt = 0 
             pw = 0
             for r in rewards[t:]:
-                r = r**3
+                r = r**3            # Rewards are cubed just as NAS.
                 Gt = Gt + GAMMA**pw * r
                 pw = pw + 1
             discounted_rewards.append(Gt)
@@ -104,7 +108,7 @@ class controller(nn.Module):
         self.optimizer.zero_grad()
         policy_gradient = torch.stack(policy_gradient).sum() * (1 / len(logits))
         policy_gradient.backward()
-        self.optimizer.step()
+        self.optimizer.step()               #Weights of the RNN are updated via the reinforce algorithm!
         
 
 

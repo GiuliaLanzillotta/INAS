@@ -18,6 +18,7 @@ class conv_net(nn.Module):
         layers = []
         img_dim = input_size
 
+        "Add Convolution Layers, Activation, and BatchNorm"
         for kernel_size, stride, n_channels, pooling, pooling_size in [conv_layers[x:x+5] for x in range(0, len(conv_layers)-1, 5)]:
             n = img_dim
             p = int(np.ceil(((n-1)*stride - n + kernel_size)/2))
@@ -26,20 +27,22 @@ class conv_net(nn.Module):
                 nn.ELU(),
                 nn.BatchNorm2d(int(n_channels))
             ]
+            "Update Image_dim, used to compute self.prev_fc_size "
             img_dim = self.update_size(img_dim, int(kernel_size), int(stride), p)
 
-            "pooling =0 is max_pool, 1 is avg_pool and 2 is no_pool"
+            " Add Pooling Options ! pooling =0 is max_pool, 1 is avg_pool and 2 is no_pool"
             if pooling==0:
                 layers += [
                     nn.MaxPool2d(kernel_size=pooling_size, stride=1, padding=0),
-                    nn.Dropout(0.1)
+                    nn.Dropout(0.2)
                 ]
                 img_dim = self.update_size(img_dim, pooling_size, 1, 0)
             if pooling==1:
                 layers += [
-                        nn.AvgPool2d(kernel_size = pooling_size, stride=1,padding=0),
-                        nn.Dropout(0.1)
+                        nn.AvgPool2d(kernel_size = pooling_size, stride=1, padding=0),
+                        nn.Dropout(0.2)
                 ]
+                "Update Image_dim, used to compute self.prev_fc_size "
                 img_dim = self.update_size(img_dim, pooling_size, 1, 0)
 
             prev_channels = n_channels
