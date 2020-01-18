@@ -34,11 +34,8 @@ def load_model(model):
 
 def load_data_CIFAR(batch_size=64):
     # Applying normalisation to images
-    global image_size
     image_size = 32
-    global prev_channels
     prev_channels = 3
-    global num_classes
     num_classes = 10
 
     transform = transforms.Compose(
@@ -52,15 +49,13 @@ def load_data_CIFAR(batch_size=64):
                                            download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=False, num_workers=0)
-    return trainloader, testloader
+    return trainloader, testloader, image_size, prev_channels, num_classes
 
 def load_data_MNIST(batch_size=4):
     # Applying normalisation to data set images
-    global image_size
+
     image_size = 28
-    global prev_channels
     prev_channels = 1
-    global num_classes
     num_classes = 10
 
     transform = transforms.Compose(
@@ -75,7 +70,7 @@ def load_data_MNIST(batch_size=4):
                                          download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=False, num_workers=0)
-    return trainloader, testloader
+    return trainloader, testloader, image_size, prev_channels, num_classes
 
 def train_CNN(net, data_loader):
 
@@ -122,18 +117,20 @@ def train_CNN(net, data_loader):
     print(reward)
 
 def test(data, num_steps):
+
     layers = 15
 
     load_data = {
         "CIFAR":load_data_CIFAR(),
         "MNIST":load_data_MNIST(),
     }
-    data_loader = load_data[data]
-
+    train_dataloader, test_dataloader, image_size, prev_channels, num_classes = load_data[data]
+    data_loader = train_dataloader, test_dataloader
     # Let the controller search in the space of possible solutions
     _controller = controller(layers)
     print("Loading the controller...")
     _controller = load_model(_controller)
+
     _cnn = cnn(layers, image_size, prev_channels, num_classes)
     state = _cnn.state
     best_state = state

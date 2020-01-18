@@ -6,12 +6,13 @@ class conv_net(nn.Module):
     """ This class represents the child architecture and is therefore respondible
     for the training and testing."""
 
-    def __init__(self, conv_layers, input_size=28, prev_channels=1, n_class=10, device = 'cuda'):
+    def __init__(self, conv_layers, input_size, prev_channels, n_class, device = 'cuda'):
         super(conv_net, self).__init__()
 
         self.input_size = input_size
         self.n_class = n_class
         self.device = device
+        self.prev_channels = prev_channels
 
         # We build the child layer by layer using a ModuleList
         layers = []
@@ -19,6 +20,7 @@ class conv_net(nn.Module):
         # to keep track of the image dimension while building the architecture
         img_dim = input_size
         # We first iterate over the state and translate each hyper-parameter
+        prev_channels = self.prev_channels
         # in the state into an actual hyper-parameter of the child architecture
         for kernel_size, stride, n_channels, pooling, pooling_size in \
                 [conv_layers[x:x+5] for x in range(0, len(conv_layers)-1, 5)]:
