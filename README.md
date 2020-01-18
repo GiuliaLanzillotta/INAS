@@ -3,7 +3,7 @@ Infinite Neural Architecture Search
 
 
 ## Neural Architecture Search (NAS)
-This project proposes an expansion of the work  the paper by Zoph and Le, 2017, *Neural Architecture Search with Reinforcement learning*. Which can be found with the link below:
+This project proposes an expansion of the work  the paper by Zoph and Le, 2017, *Neural Architecture Search with Reinforcement learning*. which can be found with the following link:
 https://arxiv.org/abs/1611.01578
 
 Neural Architecture Search (NAS) automates the process of designing neural network architectures. Designing high-quality neural networks requires specialized knowledge and extensive experience. Neural Architecture Search answers these requirements by automating the process of architecture engineering. Due to the work of Zoph and Le (2017), (see the link above) which framed NAS as a Reinforcement Learning problem, research on the topic has flourished. A wide variety of methods that tackled different issues have been published in quick succession. Within this expanding research area, our work focuses on the boundaries of the search space. More specifically, we challenge the design choices of Zoph and Le for the state and action spaces in their paper, which have been rarely investigated in recent years works. Our study is on the search for convolutional architectures, but we believe it can be applied to different architectures. Infinite Neural Architecture Search, INAS, obtains an infinite search space as a consequence of explicitly separating the action and state spaces. 
