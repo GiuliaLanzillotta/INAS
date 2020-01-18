@@ -13,14 +13,14 @@ Neural Architecture Search (NAS) automates the process of designing neural netwo
 
 The model (see Figure below) consists in a pair of networks: a recurrent network (the controller), and a convolutional network (the child architecture).
 
-![alt text](https://github.com/GiuliaLanzillotta/NAS/blob/master/NAS.jpg)
+![alt text](https://github.com/GiuliaLanzillotta/NAS/blob/Attention/NAS.jpg)
 
 The training is organised in episodes and each episode consists of multiple steps. 
 Starting from a fixed initial state, the controller progressively edits the child network's configuration, specified by a string containing all modifiable hyperparameters. The CNN is trained and its accuracy on a validation set acts as the reward signal. At the end of the episode we can compute the policy gradient to update the controller. As a result, in the next iteration, the controller will give higher probabilities to sequence of actions that receive high accuracies. In other words, the controller will learn to improve its search over time.
 
 The following figure summarises the essential characteristics of every controller.
 
-![alt text](https://github.com/GiuliaLanzillotta/NAS/blob/master/NAScontroller.png)
+![alt text](https://github.com/GiuliaLanzillotta/NAS/blob/Attention/NAScontroller.png)
 ## Repo organisation
 
 The implementation consists of four different modules.
