@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 import pandas as pd
 import datetime
 
-# This means that we're only looking at squared images for now.
+"Define some image related parameters"
 image_size = 32
 prev_channels = 3
 num_classes = 10
@@ -47,6 +47,7 @@ def load_model(model):
     episode = checkpoint['episode']
     return model,episode
 
+"Main Training Loop"
 def train():
 
     num_episodes = 10
@@ -126,6 +127,7 @@ def train():
     print("Saving the controller...")
     save_model(controller1, ep + starting_episode)
 
+"Load Dataset Functions"
 def load_data_CIFAR(batch_size=4):
     transform = transforms.Compose(
         [transforms.ToTensor(),

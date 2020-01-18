@@ -2,8 +2,6 @@
     It has to implement the following methods:
     - get_action(state)
     - update_policy(episode)
-    
-    Change the controller? Attention model or bidirectional RNN.
 """
 
 import torch
@@ -18,8 +16,7 @@ GAMMA = 1
 
 class controller(nn.Module):
 
-    def __init__(self, max_layers): # x is a state
-        #TODO: create controller architecture
+    def __init__(self, max_layers):
         super(controller,self).__init__()
         
         cells = []
@@ -37,7 +34,7 @@ class controller(nn.Module):
 
         self.cells = nn.ModuleList(cells) # better name: layers
         self.num_layers = 5*max_layers
-        self.optimizer = optim.Adam(self.parameters(), lr=1e-5)
+        self.optimizer = optim.Adam(self.parameters(), lr=1e-4)
         self.exploration = 0.90
             
     def forward(self, state):
@@ -65,14 +62,15 @@ class controller(nn.Module):
         self.cells = self.cells.append(self.cells[3])
         self.cells = self.cells.append(self.cells[4])
 
+    "Exploration Calculation"
     def exponential_decayed_epsilon(self, step):
         # Decay every decay_steps interval
         decay_steps = 2
         decay_rate = 0.9
         return self.exploration * decay_rate ** (step / decay_steps)
 
+    "Get an action to build the new state of the CNN from the last one!"
     def get_action(self, state, ep):  # state = sequence of length 5 times number of layers
-        # if (np.random.random() < self.exponential_decayed_epsilon(ep)) and (ep > 0):
 
         logits = self.forward(state)
         exp = False
@@ -89,7 +87,7 @@ class controller(nn.Module):
         logits = [logit[0][torch.argmax(logit)] for logit in logits]
         return actions, logits, exp
 
-    # REINFORCE
+    "The Reinforce Algorithm"
     def update_policy(self, rewards, logits):
         discounted_rewards = []
 
@@ -108,20 +106,14 @@ class controller(nn.Module):
                     discounted_rewards.std() + 1e-4)  # normalize discounted rewards
 
         policy_gradient = []
-        # logits = torch.tensor(logits)
-        # logits = logits.flatten(1,-1)
-        # logits is a list of lists where the outer contains all steps taken, the inner for a given step length  has 10 elements where each element is a tensor of length 3
         for logit, Gt in zip(logits, discounted_rewards):
             for element in logit:
                 policy_gradient.append(-1.0 * torch.log(element) * Gt)
-                # for index in range(3):
-                #     policy_gradient.append(-1.0 * torch.log(element[0, index].type(torch.float)) * Gt)
-            # policy_gradient.append(-1*torch.tensor(logit) * torch.tensor(Gt))
 
         self.optimizer.zero_grad()
         policy_gradient = torch.stack(policy_gradient).sum()  # * (1 / len(logits))
         policy_gradient.backward()
-        self.optimizer.step()
+        self.optimizer.step()       #Weights of the RNN are updated via the reinforce algorithm!
 
 
 

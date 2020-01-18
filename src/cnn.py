@@ -130,9 +130,7 @@ class cnn():
         data_loader_train, data_loader_test = data_loader
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(self.net.parameters(), lr=0.005, weight_decay = 0.0005, momentum=0.9, nesterov= True)
-        #optimizer = torch.optim.RMSprop(self.net.parameters(), lr = 0.003, momentum = 0.9, eps= 1.e-07)
         schedular = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.8)
-        #training_batches =  len(data_loader_train)/3       FOR TQDM!
         for epoch in range(self.epochs):  # loop over the dataset multiple times
             running_loss = 0.0
             for i, data in enumerate(data_loader_train,0):
@@ -153,8 +151,6 @@ class cnn():
 
         print('Finished Training')
 
-        # class_correct = list(0. for i in range(self.num_classes))
-        # class_total = list(0. for i in range(self.num_classes))
         correct = 0
         total = 0
         with torch.no_grad():
@@ -165,14 +161,9 @@ class cnn():
                 _, predicted = torch.max(outputs, 1)
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
-                # c = (predicted == labels).squeeze()
-                # for i in range(64):
-                #     label = labels[i]
-                #     class_correct[label] += c[i].item()
-                #     class_total[label] += 1
+
 
 
         reward = correct / total
-        #reward = sum(class_correct)/sum(class_total)
 
         return reward
