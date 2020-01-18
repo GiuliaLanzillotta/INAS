@@ -74,7 +74,7 @@ You can choose between the following controllers:
 ## Ongoing experiments (or future work)
 We are still working on the implementation of the following: 
 
-- `Graph-Convolutional controller` : in the style of Kipf and Welling, ICLR 2017. Each node corresponds to an hyperparameter and each connection encodes the implicit correlation between them, information which is currently ignored.
+- `Graph-Convolutional controller` : in the style of Kipf and Welling, ICLR 2017. Each node corresponds to an hyperparameter and each connection encodes the implicit correlation between them, an information which is currently ignored.
 - `Penalty`: penalising the controller for illegal actions.
 - `Exploration`: to integrate in REINFORCE, with the intention of speeding up the search.
 Each of these experiments is implemented in a different branch.
