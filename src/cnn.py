@@ -16,7 +16,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class cnn():
 
-    def __init__(self, max_layers, image_size, prev_channels, num_classes,train, epochs=15):
+    def __init__(self, max_layers, image_size, prev_channels, num_classes,train, epochs=25):
         # The initial state is set to be a good eanough architecture in order to
         # boost the learning
         initial_state = [3, 1, 32, 2, 2,

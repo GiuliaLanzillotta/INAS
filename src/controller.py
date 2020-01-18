@@ -32,8 +32,8 @@ class controller(nn.Module):
             cells.append(cell5)
         self.cells = nn.ModuleList(cells) # better name: layers
         self.num_layers = 5*max_layers
-        self.optimizer = optim.Adam(self.parameters(), lr=5e-3)
-        self.exploration = 0.05             #Exploration set very low.
+        self.optimizer = optim.Adam(self.parameters(), lr=5e-4)
+        self.exploration = 0             #Exploration set very low.
 
 
     "Exploration Calculation"

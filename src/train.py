@@ -26,9 +26,9 @@ if torch.cuda.device_count() > 1:
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-LOAD_MODEL = True
+LOAD_MODEL = True               #Currently Loading a Model that was trained for 24 hours.
 SAVE_CONTROLLER_PATH = "./controller_stacked.pt"
-LOAD_CONTROLLER_PATH = "./controller1.pt"
+LOAD_CONTROLLER_PATH = "./controller1.pt"   #Name of the file, please load this one!
 
 "save_model saves the weights and the optimizer to enable more training"
 def save_model(model,path):
@@ -51,8 +51,8 @@ def load_model(model, path):
 def train():
 
     "Define training parameters"
-    num_episodes = 5
-    num_steps = 10
+    num_episodes = 20       # Episodes are the outer loop
+    num_steps = 5           # Steps are inner loop and number of times we train the CNN per controller update!
     max_layers = 15
     train = True
 
@@ -116,7 +116,7 @@ def train():
             rewards.append(reward)
             exps.append(exploration)
             states_history = states_history.append([new_state])
-            states_history.to_csv("states_{}.csv".format(save_time))    # Save_time only works on linux, remove for windows and rename save file.
+            states_history.to_csv("states_{}.csv".format(t1))    # Save_time only works on linux, remove for windows and rename save file.
             print("****************")                                   # If you get OS ERROR 22, change this variable to t1, or anything else!
             print("Step", ep,":", step)
             print("Reward: ", reward)
@@ -124,8 +124,8 @@ def train():
 
         exploration_history = exploration_history.append(exps)
         rewards_history = rewards_history.append(rewards)
-        rewards_history.to_csv("rewards_{}.csv".format(save_time))     # Save_time - Linux, t1 - Windows
-        exploration_history.to_csv("Exploration_{}.csv".format(save_time))  #Save_time - Linux, t1 - Windows
+        rewards_history.to_csv("rewards_{}.csv".format(t1))     # Save_time - Linux, t1 - Windows
+        exploration_history.to_csv("Exploration_{}.csv".format(t1))  #Save_time - Linux, t1 - Windows
 
         """At the end of each episode the policy gradient is back-propagated
         though the controller to update its parameters"""
