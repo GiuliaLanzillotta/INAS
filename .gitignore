@@ -3,6 +3,6 @@ venv
 /src/data
 /data
 /src/__pycache__
-lsf.o3465369
+output/lsf.o3465369
 src/states.csv
 *.csv

@@ -34,6 +34,7 @@ class cnn():
                          3, 1, 128, 2, 2,
                          3, 1, 128, 0, 2]
         self.state = initial_state
+        self.net = None
         self.image_size = image_size
         self.original_image_size = image_size
         self.prev_channels = prev_channels
