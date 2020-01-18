@@ -36,6 +36,7 @@ building the new state from the old state and an action and keeping
 track of the states as the training progresses;
 - the `conv_net.py` file is the actual child architecture and exposes its
 training and testing functions.
+- The `test.py` file is responsible for managing the usage of the final controller architecture. More about testing in the test section below.
 
 The repository is organised over different branches: each branch corresponds 
 a conducted experiment. Mainly, branches differ in the implementation
