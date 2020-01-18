@@ -1,5 +1,6 @@
 # INAS
 Infinite Neural Architecture Search
+
 Authors: Mian Akbar Shah, Giulia Lanzillotta, Sean Bergeron and Soley Hafthorsdottir
 
 
