@@ -53,9 +53,15 @@ The following packages are required to run the code:
 cd src
 python train.py
 ```
-
-### Data
 To train the controller the CIFAR-10 dataset is used. So as soon as the program is launched it will start downloading locally the CIFAR-10 dataset. 
+### Test the controller 
+You can use the Attention based controller to create a CNN architecture with the test module. 
+At the moment, only the CIFAR-10 and MNIST datasets are supported. To add a dataset, implement a new loading function in the test file, following the other loading functions guidelines. As soon as the program is launched it will start downloading locally the dataset. 
+```python
+cd src
+python test.py --data [DATASET] --steps [STEPS]
+```
+usage : DATASET should be either CIFAR or MNIST. STEPS is the number of steps allowed for the controller search. 
 
 ## Controller
 You can choose between the following controllers:
