@@ -184,7 +184,7 @@ class cnn():
                 optimizer.step()
                 running_loss += loss.item()
                 if i % 300 == 299:
-                    print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 300))
+                    print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 300.0))
                     running_loss = 0.0
                 if i % 800 == 799:
                     break
